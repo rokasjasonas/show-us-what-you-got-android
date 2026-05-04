@@ -1,24 +1,20 @@
 package com.rokas.showuswhatyougot.data
 
-import com.google.gson.GsonBuilder
 import com.rokas.showuswhatyougot.model.Pokemon
 import com.rokas.showuswhatyougot.model.PokemonDetail
 import com.rokas.showuswhatyougot.network.PokeApiService
 import java.util.Locale
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import javax.inject.Inject
+import javax.inject.Singleton
 
-object PokemonRepository {
-    private const val BASE_URL = "https://pokeapi.co/api/v2/"
-    private const val OFFICIAL_ARTWORK_URL =
-        "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/%d.png"
-
-    private val retrofit: Retrofit = Retrofit.Builder()
-        .baseUrl(BASE_URL)
-        .addConverterFactory(GsonConverterFactory.create(GsonBuilder().create()))
-        .build()
-
-    private val pokeApiService: PokeApiService = retrofit.create(PokeApiService::class.java)
+@Singleton
+class PokemonRepository @Inject constructor(
+    private val pokeApiService: PokeApiService,
+) {
+    companion object {
+        private const val OFFICIAL_ARTWORK_URL =
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/%d.png"
+    }
 
     suspend fun getPokemon(limit: Int = 151): List<Pokemon> =
         pokeApiService.getPokemonList(limit = limit).results.mapNotNull { entry ->

@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,7 +31,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
-import androidx.annotation.StringRes
 import com.rokas.showuswhatyougot.data.PokemonRepository
 import com.rokas.showuswhatyougot.model.Pokemon
 import com.rokas.showuswhatyougot.ui.pokemon.PokemonDetailScreen
@@ -38,21 +38,31 @@ import com.rokas.showuswhatyougot.ui.pokemon.PokemonDetailUiState
 import com.rokas.showuswhatyougot.ui.pokemon.PokemonListScreen
 import com.rokas.showuswhatyougot.ui.pokemon.PokemonUiState
 import com.rokas.showuswhatyougot.ui.theme.ShowUsWhatYouGotTheme
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @Inject
+    lateinit var pokemonRepository: PokemonRepository
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             ShowUsWhatYouGotTheme {
-                ShowUsWhatYouGotApp()
+                ShowUsWhatYouGotApp(
+                    pokemonRepository = pokemonRepository,
+                )
             }
         }
     }
 }
 
 @Composable
-fun ShowUsWhatYouGotApp() {
+fun ShowUsWhatYouGotApp(
+    pokemonRepository: PokemonRepository,
+) {
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
     var reloadKey by rememberSaveable { mutableIntStateOf(0) }
     var selectedPokemonId by rememberSaveable { mutableStateOf<Int?>(null) }
@@ -64,7 +74,7 @@ fun ShowUsWhatYouGotApp() {
     ) {
         value = PokemonUiState.Loading
         value = try {
-            PokemonUiState.Success(PokemonRepository.getPokemon())
+            PokemonUiState.Success(pokemonRepository.getPokemon())
         } catch (exception: Exception) {
             PokemonUiState.Error(exception.message.orEmpty())
         }
@@ -78,7 +88,7 @@ fun ShowUsWhatYouGotApp() {
         val pokemonId = selectedPokemonId ?: return@produceState
         value = PokemonDetailUiState.Loading
         value = try {
-            PokemonDetailUiState.Success(PokemonRepository.getPokemonDetail(pokemonId))
+            PokemonDetailUiState.Success(pokemonRepository.getPokemonDetail(pokemonId))
         } catch (exception: Exception) {
             PokemonDetailUiState.Error(exception.message.orEmpty())
         }

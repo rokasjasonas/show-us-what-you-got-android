@@ -1,15 +1,14 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
 }
+
+apply(plugin = "com.google.dagger.hilt.android")
 
 android {
     namespace = "com.rokas.showuswhatyougot"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.rokas.showuswhatyougot"
@@ -50,8 +49,10 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.coil.compose)
+    implementation(libs.google.hilt.android)
     implementation(libs.squareup.retrofit)
     implementation(libs.squareup.retrofit.converter.gson)
+    ksp(libs.google.hilt.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
