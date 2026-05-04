@@ -1,7 +1,7 @@
 # show-us-what-you-got-android
 
 * Screens
-  * Home
+  * Home - Pokédex list from PokeAPI with images
   * Details
 * Multimodule
 * 
