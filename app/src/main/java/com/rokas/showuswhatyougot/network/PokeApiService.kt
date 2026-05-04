@@ -19,6 +19,7 @@ interface PokeApiService {
 }
 
 data class PokemonListResponse(
+    val next: String?,
     val results: List<PokemonListEntry>,
 )
 

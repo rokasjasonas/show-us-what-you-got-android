@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -17,6 +18,10 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -29,28 +34,39 @@ import com.rokas.showuswhatyougot.R
 import com.rokas.showuswhatyougot.model.Pokemon
 import com.rokas.showuswhatyougot.ui.theme.ShowUsWhatYouGotTheme
 
-sealed interface PokemonUiState {
-    data object Loading : PokemonUiState
-    data class Success(val pokemon: List<Pokemon>) : PokemonUiState
-    data class Error(val message: String) : PokemonUiState
-}
+data class PokemonUiState(
+    val pokemon: List<Pokemon> = emptyList(),
+    val isInitialLoading: Boolean = false,
+    val isAppending: Boolean = false,
+    val initialErrorMessage: String = "",
+    val appendErrorMessage: String = "",
+    val nextOffset: Int? = 0,
+)
 
 @Composable
 fun PokemonListScreen(
     uiState: PokemonUiState,
     onRetry: () -> Unit,
+    onLoadMore: () -> Unit,
     onPokemonClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    when (uiState) {
-        PokemonUiState.Loading -> PokemonLoadingState(modifier = modifier)
-        is PokemonUiState.Error -> PokemonErrorState(
-            message = uiState.message,
+    when {
+        uiState.isInitialLoading && uiState.pokemon.isEmpty() -> PokemonLoadingState(modifier = modifier)
+
+        uiState.initialErrorMessage.isNotBlank() && uiState.pokemon.isEmpty() -> PokemonErrorState(
+            message = uiState.initialErrorMessage,
             onRetry = onRetry,
             modifier = modifier,
         )
-        is PokemonUiState.Success -> PokemonContent(
+
+        else -> PokemonContent(
             pokemon = uiState.pokemon,
+            isAppending = uiState.isAppending,
+            appendErrorMessage = uiState.appendErrorMessage,
+            canLoadMore = uiState.nextOffset != null,
+            onLoadMore = onLoadMore,
+            onRetryAppend = onLoadMore,
             onPokemonClick = onPokemonClick,
             modifier = modifier,
         )
@@ -101,10 +117,34 @@ private fun PokemonErrorState(
 @Composable
 private fun PokemonContent(
     pokemon: List<Pokemon>,
+    isAppending: Boolean,
+    appendErrorMessage: String,
+    canLoadMore: Boolean,
+    onLoadMore: () -> Unit,
+    onRetryAppend: () -> Unit,
     onPokemonClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val listState = rememberLazyListState()
+    val shouldLoadMore by remember(pokemon, canLoadMore, isAppending) {
+        derivedStateOf {
+            if (!canLoadMore || isAppending || pokemon.isEmpty()) {
+                false
+            } else {
+                val lastVisibleItemIndex = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: return@derivedStateOf false
+                lastVisibleItemIndex >= pokemon.lastIndex - 4
+            }
+        }
+    }
+
+    LaunchedEffect(shouldLoadMore, pokemon.size, isAppending, canLoadMore) {
+        if (shouldLoadMore) {
+            onLoadMore()
+        }
+    }
+
     LazyColumn(
+        state = listState,
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -138,8 +178,55 @@ private fun PokemonContent(
             )
         }
 
+        if (isAppending) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+        }
+
+        if (appendErrorMessage.isNotBlank()) {
+            item {
+                PokemonAppendError(
+                    message = appendErrorMessage,
+                    onRetry = onRetryAppend,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            }
+        }
+
         item {
             Box(modifier = Modifier.size(4.dp))
+        }
+    }
+}
+
+@Composable
+private fun PokemonAppendError(
+    message: String,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val errorMessage = message.ifBlank { stringResource(R.string.pokemon_error_generic) }
+
+    Card(modifier = modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = errorMessage,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            Button(onClick = onRetry) {
+                Text(text = stringResource(R.string.try_again))
+            }
         }
     }
 }
@@ -191,14 +278,16 @@ private fun PokemonRow(
 private fun PokemonListScreenPreview() {
     ShowUsWhatYouGotTheme {
         PokemonListScreen(
-            uiState = PokemonUiState.Success(
-                listOf(
+            uiState = PokemonUiState(
+                pokemon = listOf(
                     Pokemon(1, "Bulbasaur", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png"),
                     Pokemon(4, "Charmander", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/4.png"),
                     Pokemon(7, "Squirtle", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/7.png"),
-                )
+                ),
+                nextOffset = 20,
             ),
             onRetry = {},
+            onLoadMore = {},
             onPokemonClick = {},
         )
     }

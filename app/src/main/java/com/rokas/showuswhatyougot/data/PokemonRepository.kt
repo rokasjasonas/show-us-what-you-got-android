@@ -16,15 +16,27 @@ class PokemonRepository @Inject constructor(
             "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/%d.png"
     }
 
-    suspend fun getPokemon(limit: Int = 151): List<Pokemon> =
-        pokeApiService.getPokemonList(limit = limit).results.mapNotNull { entry ->
+    suspend fun getPokemonPage(
+        limit: Int,
+        offset: Int,
+    ): PokemonPage {
+        val response = pokeApiService.getPokemonList(
+            limit = limit,
+            offset = offset,
+        )
+
+        return PokemonPage(
+            pokemon = response.results.mapNotNull { entry ->
             val pokemonId = entry.url.trimEnd('/').substringAfterLast('/').toIntOrNull() ?: return@mapNotNull null
             Pokemon(
                 id = pokemonId,
                 name = entry.name.toDisplayName(),
                 imageUrl = OFFICIAL_ARTWORK_URL.format(pokemonId),
             )
-        }.sortedBy(Pokemon::id)
+            }.sortedBy(Pokemon::id),
+            nextOffset = response.next?.substringAfter("offset=")?.substringBefore('&')?.toIntOrNull(),
+        )
+    }
 
     suspend fun getPokemonDetail(id: Int): PokemonDetail {
         val response = pokeApiService.getPokemonDetail(id)
@@ -57,4 +69,9 @@ class PokemonRepository @Inject constructor(
             }
         }
 }
+
+data class PokemonPage(
+    val pokemon: List<Pokemon>,
+    val nextOffset: Int?,
+)
 

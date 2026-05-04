@@ -17,10 +17,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -39,6 +42,7 @@ import com.rokas.showuswhatyougot.ui.pokemon.PokemonListScreen
 import com.rokas.showuswhatyougot.ui.pokemon.PokemonUiState
 import com.rokas.showuswhatyougot.ui.theme.ShowUsWhatYouGotTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -59,6 +63,8 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+private const val POKEMON_PAGE_SIZE = 30
+
 @Composable
 fun ShowUsWhatYouGotApp(
     pokemonRepository: PokemonRepository,
@@ -67,17 +73,75 @@ fun ShowUsWhatYouGotApp(
     var reloadKey by rememberSaveable { mutableIntStateOf(0) }
     var selectedPokemonId by rememberSaveable { mutableStateOf<Int?>(null) }
     var detailReloadKey by rememberSaveable { mutableIntStateOf(0) }
+    var pokemonUiState by remember {
+        mutableStateOf(
+            PokemonUiState(
+                isInitialLoading = true,
+                nextOffset = 0,
+            )
+        )
+    }
+    val scope = rememberCoroutineScope()
 
-    val pokemonUiState by produceState<PokemonUiState>(
-        initialValue = PokemonUiState.Loading,
-        key1 = reloadKey,
-    ) {
-        value = PokemonUiState.Loading
-        value = try {
-            PokemonUiState.Success(pokemonRepository.getPokemon())
+    suspend fun loadInitialPokemonPage() {
+        pokemonUiState = PokemonUiState(
+            isInitialLoading = true,
+            nextOffset = 0,
+        )
+
+        pokemonUiState = try {
+            val page = pokemonRepository.getPokemonPage(
+                limit = POKEMON_PAGE_SIZE,
+                offset = 0,
+            )
+            PokemonUiState(
+                pokemon = page.pokemon,
+                nextOffset = page.nextOffset,
+            )
         } catch (exception: Exception) {
-            PokemonUiState.Error(exception.message.orEmpty())
+            PokemonUiState(
+                initialErrorMessage = exception.message.orEmpty(),
+                nextOffset = 0,
+            )
         }
+    }
+
+    fun loadNextPokemonPage() {
+        val currentState = pokemonUiState
+        val nextOffset = currentState.nextOffset ?: return
+
+        if (currentState.isInitialLoading || currentState.isAppending) {
+            return
+        }
+
+        pokemonUiState = currentState.copy(
+            isAppending = true,
+            appendErrorMessage = "",
+        )
+
+        scope.launch {
+            pokemonUiState = try {
+                val page = pokemonRepository.getPokemonPage(
+                    limit = POKEMON_PAGE_SIZE,
+                    offset = nextOffset,
+                )
+                currentState.copy(
+                    pokemon = currentState.pokemon + page.pokemon,
+                    isAppending = false,
+                    appendErrorMessage = "",
+                    nextOffset = page.nextOffset,
+                )
+            } catch (exception: Exception) {
+                currentState.copy(
+                    isAppending = false,
+                    appendErrorMessage = exception.message.orEmpty(),
+                )
+            }
+        }
+    }
+
+    LaunchedEffect(reloadKey) {
+        loadInitialPokemonPage()
     }
 
     val selectedPokemonDetailState by produceState<SelectedPokemonDetailState?>(
@@ -118,6 +182,7 @@ fun ShowUsWhatYouGotApp(
         currentDestination = currentDestination,
         onDestinationChanged = { currentDestination = it },
         pokemonUiState = pokemonUiState,
+        onLoadMorePokemon = ::loadNextPokemonPage,
         selectedPokemonId = selectedPokemonId,
         pokemonDetailUiState = pokemonDetailUiState,
         onPokemonSelected = {
@@ -140,6 +205,7 @@ private fun ShowUsWhatYouGotAppContent(
     currentDestination: AppDestinations,
     onDestinationChanged: (AppDestinations) -> Unit,
     pokemonUiState: PokemonUiState,
+    onLoadMorePokemon: () -> Unit,
     selectedPokemonId: Int?,
     pokemonDetailUiState: PokemonDetailUiState,
     onPokemonSelected: (Int) -> Unit,
@@ -173,6 +239,7 @@ private fun ShowUsWhatYouGotAppContent(
                     PokemonListScreen(
                         uiState = pokemonUiState,
                         onRetry = onRetryPokemonLoad,
+                        onLoadMore = onLoadMorePokemon,
                         onPokemonClick = onPokemonSelected,
                         modifier = Modifier.padding(innerPadding),
                     )
@@ -244,12 +311,14 @@ private fun ShowUsWhatYouGotAppPreview() {
         ShowUsWhatYouGotAppContent(
             currentDestination = AppDestinations.HOME,
             onDestinationChanged = {},
-            pokemonUiState = PokemonUiState.Success(
-                listOf(
+            pokemonUiState = PokemonUiState(
+                pokemon = listOf(
                     Pokemon(25, "Pikachu", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"),
                     Pokemon(39, "Jigglypuff", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/39.png"),
-                )
+                ),
+                nextOffset = 30,
             ),
+            onLoadMorePokemon = {},
             selectedPokemonId = null,
             pokemonDetailUiState = PokemonDetailUiState.Loading,
             onPokemonSelected = {},
