@@ -23,10 +23,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
+import androidx.annotation.StringRes
 import com.rokas.showuswhatyougot.data.PokemonRepository
 import com.rokas.showuswhatyougot.model.Pokemon
 import com.rokas.showuswhatyougot.ui.pokemon.PokemonListScreen
@@ -49,6 +52,7 @@ class MainActivity : ComponentActivity() {
 fun ShowUsWhatYouGotApp() {
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
     var reloadKey by rememberSaveable { mutableIntStateOf(0) }
+    val genericErrorMessage = stringResource(R.string.pokemon_error_generic)
 
     val pokemonUiState by produceState<PokemonUiState>(
         initialValue = PokemonUiState.Loading,
@@ -58,7 +62,7 @@ fun ShowUsWhatYouGotApp() {
         value = try {
             PokemonUiState.Success(PokemonRepository.getPokemon())
         } catch (exception: Exception) {
-            PokemonUiState.Error(exception.message ?: "Please check your connection and try again.")
+            PokemonUiState.Error(exception.message ?: genericErrorMessage)
         }
     }
 
@@ -77,17 +81,20 @@ private fun ShowUsWhatYouGotAppContent(
     pokemonUiState: PokemonUiState,
     onRetryPokemonLoad: () -> Unit,
 ) {
+    val context = LocalContext.current
+
     NavigationSuiteScaffold(
         navigationSuiteItems = {
             AppDestinations.entries.forEach {
+                val label = context.getString(it.labelRes)
                 item(
                     icon = {
                         Icon(
                             painter = painterResource(it.icon),
-                            contentDescription = it.label,
+                            contentDescription = label,
                         )
                     },
-                    label = { Text(it.label) },
+                    label = { Text(label) },
                     selected = it == currentDestination,
                     onClick = { onDestinationChanged(it) },
                 )
@@ -103,14 +110,14 @@ private fun ShowUsWhatYouGotAppContent(
                 )
 
                 AppDestinations.FAVORITES -> PlaceholderScreen(
-                    title = "Favorites",
-                    message = "Save your favorite Pokemon here next.",
+                    titleRes = R.string.nav_favorites,
+                    messageRes = R.string.favorites_placeholder_message,
                     modifier = Modifier.padding(innerPadding),
                 )
 
                 AppDestinations.PROFILE -> PlaceholderScreen(
-                    title = "Profile",
-                    message = "Trainer profile features can live here.",
+                    titleRes = R.string.nav_profile,
+                    messageRes = R.string.profile_placeholder_message,
                     modifier = Modifier.padding(innerPadding),
                 )
             }
@@ -119,18 +126,18 @@ private fun ShowUsWhatYouGotAppContent(
 }
 
 enum class AppDestinations(
-    val label: String,
+    @param:StringRes val labelRes: Int,
     val icon: Int,
 ) {
-    HOME("Home", R.drawable.ic_home),
-    FAVORITES("Favorites", R.drawable.ic_favorite),
-    PROFILE("Profile", R.drawable.ic_account_box),
+    HOME(R.string.nav_home, R.drawable.ic_home),
+    FAVORITES(R.string.nav_favorites, R.drawable.ic_favorite),
+    PROFILE(R.string.nav_profile, R.drawable.ic_account_box),
 }
 
 @Composable
 private fun PlaceholderScreen(
-    title: String,
-    message: String,
+    @StringRes titleRes: Int,
+    @StringRes messageRes: Int,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -142,11 +149,11 @@ private fun PlaceholderScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text(
-                text = title,
+                text = stringResource(titleRes),
                 style = MaterialTheme.typography.headlineSmall,
             )
             Text(
-                text = message,
+                text = stringResource(messageRes),
                 style = MaterialTheme.typography.bodyLarge,
             )
         }

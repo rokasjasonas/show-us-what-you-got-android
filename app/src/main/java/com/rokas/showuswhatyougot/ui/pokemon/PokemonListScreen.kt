@@ -19,10 +19,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.rokas.showuswhatyougot.R
 import com.rokas.showuswhatyougot.model.Pokemon
 import com.rokas.showuswhatyougot.ui.theme.ShowUsWhatYouGotTheme
 
@@ -77,7 +79,7 @@ private fun PokemonErrorState(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                text = "Could not load Pokémon",
+                text = stringResource(R.string.pokemon_load_error_title),
                 style = MaterialTheme.typography.titleLarge,
             )
             Text(
@@ -85,7 +87,7 @@ private fun PokemonErrorState(
                 style = MaterialTheme.typography.bodyMedium,
             )
             Button(onClick = onRetry) {
-                Text(text = "Try again")
+                Text(text = stringResource(R.string.try_again))
             }
         }
     }
@@ -108,12 +110,12 @@ private fun PokemonContent(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
-                    text = "Pokédex",
+                    text = stringResource(R.string.pokedex_title),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    text = "First ${pokemon.size} Pokémon from PokeAPI",
+                    text = stringResource(R.string.pokemon_list_subtitle, pokemon.size),
                     style = MaterialTheme.typography.bodyLarge,
                 )
             }

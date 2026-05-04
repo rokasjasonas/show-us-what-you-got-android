@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">Show us what you got</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_favorites">Favorites</string>
+    <string name="nav_profile">Profile</string>
+    <string name="pokemon_error_generic">Please check your connection and try again.</string>
+    <string name="favorites_placeholder_message">Save your favorite Pokemon here next.</string>
+    <string name="profile_placeholder_message">Trainer profile features can live here.</string>
+    <string name="pokemon_load_error_title">Could not load Pokemon</string>
+    <string name="try_again">Try again</string>
+    <string name="pokedex_title">Pokedex</string>
+    <string name="pokemon_list_subtitle">First %1$d Pokemon from PokeAPI</string>
 </resources>
