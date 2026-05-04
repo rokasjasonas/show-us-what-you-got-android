@@ -80,19 +80,35 @@ fun ShowUsWhatYouGotApp(
         }
     }
 
-    val pokemonDetailUiState by produceState<PokemonDetailUiState>(
-        initialValue = PokemonDetailUiState.Loading,
+    val selectedPokemonDetailState by produceState<SelectedPokemonDetailState?>(
+        initialValue = null,
         key1 = selectedPokemonId,
         key2 = detailReloadKey,
     ) {
         val pokemonId = selectedPokemonId ?: return@produceState
-        value = PokemonDetailUiState.Loading
+        value = SelectedPokemonDetailState(
+            pokemonId = pokemonId,
+            uiState = PokemonDetailUiState.Loading,
+        )
         value = try {
-            PokemonDetailUiState.Success(pokemonRepository.getPokemonDetail(pokemonId))
+            SelectedPokemonDetailState(
+                pokemonId = pokemonId,
+                uiState = PokemonDetailUiState.Success(pokemonRepository.getPokemonDetail(pokemonId)),
+            )
         } catch (exception: Exception) {
-            PokemonDetailUiState.Error(exception.message.orEmpty())
+            SelectedPokemonDetailState(
+                pokemonId = pokemonId,
+                uiState = PokemonDetailUiState.Error(exception.message.orEmpty()),
+            )
         }
     }
+
+    val pokemonDetailUiState =
+        if (selectedPokemonDetailState?.pokemonId == selectedPokemonId) {
+            selectedPokemonDetailState?.uiState ?: PokemonDetailUiState.Loading
+        } else {
+            PokemonDetailUiState.Loading
+        }
 
     BackHandler(enabled = selectedPokemonId != null) {
         selectedPokemonId = null
@@ -113,6 +129,11 @@ fun ShowUsWhatYouGotApp(
         onRetryPokemonLoad = { reloadKey++ },
     )
 }
+
+private data class SelectedPokemonDetailState(
+    val pokemonId: Int,
+    val uiState: PokemonDetailUiState,
+)
 
 @Composable
 private fun ShowUsWhatYouGotAppContent(

@@ -4,7 +4,7 @@
   * Home - Pokédex list from PokeAPI with images
   * Details
 * Multimodule
-* 
+
 * Caching
 * Unit tests
 * Debug menu
