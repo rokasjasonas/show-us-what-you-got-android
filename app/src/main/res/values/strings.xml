@@ -7,7 +7,15 @@
     <string name="favorites_placeholder_message">Save your favorite Pokemon here next.</string>
     <string name="profile_placeholder_message">Trainer profile features can live here.</string>
     <string name="pokemon_load_error_title">Could not load Pokemon</string>
+    <string name="pokemon_details_error_title">Could not load Pokemon details</string>
     <string name="try_again">Try again</string>
+    <string name="back">Back</string>
     <string name="pokedex_title">Pokedex</string>
     <string name="pokemon_list_subtitle">First %1$d Pokemon from PokeAPI</string>
+    <string name="pokemon_number">#%1$03d</string>
+    <string name="pokemon_details_about_title">About</string>
+    <string name="pokemon_details_types_title">Types</string>
+    <string name="pokemon_details_abilities_title">Abilities</string>
+    <string name="pokemon_details_height">Height: %1$.1f m</string>
+    <string name="pokemon_details_weight">Weight: %1$.1f kg</string>
 </resources>

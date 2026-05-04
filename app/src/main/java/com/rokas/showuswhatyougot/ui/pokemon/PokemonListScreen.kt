@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -38,6 +39,7 @@ sealed interface PokemonUiState {
 fun PokemonListScreen(
     uiState: PokemonUiState,
     onRetry: () -> Unit,
+    onPokemonClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     when (uiState) {
@@ -49,6 +51,7 @@ fun PokemonListScreen(
         )
         is PokemonUiState.Success -> PokemonContent(
             pokemon = uiState.pokemon,
+            onPokemonClick = onPokemonClick,
             modifier = modifier,
         )
     }
@@ -70,6 +73,8 @@ private fun PokemonErrorState(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val errorMessage = message.ifBlank { stringResource(R.string.pokemon_error_generic) }
+
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
@@ -83,7 +88,7 @@ private fun PokemonErrorState(
                 style = MaterialTheme.typography.titleLarge,
             )
             Text(
-                text = message,
+                text = errorMessage,
                 style = MaterialTheme.typography.bodyMedium,
             )
             Button(onClick = onRetry) {
@@ -96,6 +101,7 @@ private fun PokemonErrorState(
 @Composable
 private fun PokemonContent(
     pokemon: List<Pokemon>,
+    onPokemonClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -127,6 +133,7 @@ private fun PokemonContent(
         ) { item ->
             PokemonRow(
                 pokemon = item,
+                onClick = { onPokemonClick(item.id) },
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
         }
@@ -140,9 +147,14 @@ private fun PokemonContent(
 @Composable
 private fun PokemonRow(
     pokemon: Pokemon,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Card(modifier = modifier.fillMaxWidth()) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -187,6 +199,7 @@ private fun PokemonListScreenPreview() {
                 )
             ),
             onRetry = {},
+            onPokemonClick = {},
         )
     }
 }

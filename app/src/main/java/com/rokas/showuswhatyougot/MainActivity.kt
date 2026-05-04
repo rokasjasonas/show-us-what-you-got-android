@@ -2,6 +2,7 @@ package com.rokas.showuswhatyougot
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
@@ -32,6 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.annotation.StringRes
 import com.rokas.showuswhatyougot.data.PokemonRepository
 import com.rokas.showuswhatyougot.model.Pokemon
+import com.rokas.showuswhatyougot.ui.pokemon.PokemonDetailScreen
+import com.rokas.showuswhatyougot.ui.pokemon.PokemonDetailUiState
 import com.rokas.showuswhatyougot.ui.pokemon.PokemonListScreen
 import com.rokas.showuswhatyougot.ui.pokemon.PokemonUiState
 import com.rokas.showuswhatyougot.ui.theme.ShowUsWhatYouGotTheme
@@ -52,7 +55,8 @@ class MainActivity : ComponentActivity() {
 fun ShowUsWhatYouGotApp() {
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
     var reloadKey by rememberSaveable { mutableIntStateOf(0) }
-    val genericErrorMessage = stringResource(R.string.pokemon_error_generic)
+    var selectedPokemonId by rememberSaveable { mutableStateOf<Int?>(null) }
+    var detailReloadKey by rememberSaveable { mutableIntStateOf(0) }
 
     val pokemonUiState by produceState<PokemonUiState>(
         initialValue = PokemonUiState.Loading,
@@ -62,14 +66,40 @@ fun ShowUsWhatYouGotApp() {
         value = try {
             PokemonUiState.Success(PokemonRepository.getPokemon())
         } catch (exception: Exception) {
-            PokemonUiState.Error(exception.message ?: genericErrorMessage)
+            PokemonUiState.Error(exception.message.orEmpty())
         }
+    }
+
+    val pokemonDetailUiState by produceState<PokemonDetailUiState>(
+        initialValue = PokemonDetailUiState.Loading,
+        key1 = selectedPokemonId,
+        key2 = detailReloadKey,
+    ) {
+        val pokemonId = selectedPokemonId ?: return@produceState
+        value = PokemonDetailUiState.Loading
+        value = try {
+            PokemonDetailUiState.Success(PokemonRepository.getPokemonDetail(pokemonId))
+        } catch (exception: Exception) {
+            PokemonDetailUiState.Error(exception.message.orEmpty())
+        }
+    }
+
+    BackHandler(enabled = selectedPokemonId != null) {
+        selectedPokemonId = null
     }
 
     ShowUsWhatYouGotAppContent(
         currentDestination = currentDestination,
         onDestinationChanged = { currentDestination = it },
         pokemonUiState = pokemonUiState,
+        selectedPokemonId = selectedPokemonId,
+        pokemonDetailUiState = pokemonDetailUiState,
+        onPokemonSelected = {
+            selectedPokemonId = it
+            detailReloadKey = 0
+        },
+        onBackFromPokemonDetail = { selectedPokemonId = null },
+        onRetryPokemonDetailLoad = { detailReloadKey++ },
         onRetryPokemonLoad = { reloadKey++ },
     )
 }
@@ -79,6 +109,11 @@ private fun ShowUsWhatYouGotAppContent(
     currentDestination: AppDestinations,
     onDestinationChanged: (AppDestinations) -> Unit,
     pokemonUiState: PokemonUiState,
+    selectedPokemonId: Int?,
+    pokemonDetailUiState: PokemonDetailUiState,
+    onPokemonSelected: (Int) -> Unit,
+    onBackFromPokemonDetail: () -> Unit,
+    onRetryPokemonDetailLoad: () -> Unit,
     onRetryPokemonLoad: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -103,11 +138,21 @@ private fun ShowUsWhatYouGotAppContent(
     ) {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             when (currentDestination) {
-                AppDestinations.HOME -> PokemonListScreen(
-                    uiState = pokemonUiState,
-                    onRetry = onRetryPokemonLoad,
-                    modifier = Modifier.padding(innerPadding),
-                )
+                AppDestinations.HOME -> if (selectedPokemonId == null) {
+                    PokemonListScreen(
+                        uiState = pokemonUiState,
+                        onRetry = onRetryPokemonLoad,
+                        onPokemonClick = onPokemonSelected,
+                        modifier = Modifier.padding(innerPadding),
+                    )
+                } else {
+                    PokemonDetailScreen(
+                        uiState = pokemonDetailUiState,
+                        onBack = onBackFromPokemonDetail,
+                        onRetry = onRetryPokemonDetailLoad,
+                        modifier = Modifier.padding(innerPadding),
+                    )
+                }
 
                 AppDestinations.FAVORITES -> PlaceholderScreen(
                     titleRes = R.string.nav_favorites,
@@ -174,6 +219,11 @@ private fun ShowUsWhatYouGotAppPreview() {
                     Pokemon(39, "Jigglypuff", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/39.png"),
                 )
             ),
+            selectedPokemonId = null,
+            pokemonDetailUiState = PokemonDetailUiState.Loading,
+            onPokemonSelected = {},
+            onBackFromPokemonDetail = {},
+            onRetryPokemonDetailLoad = {},
             onRetryPokemonLoad = {},
         )
     }

@@ -2,6 +2,7 @@ package com.rokas.showuswhatyougot.data
 
 import com.google.gson.GsonBuilder
 import com.rokas.showuswhatyougot.model.Pokemon
+import com.rokas.showuswhatyougot.model.PokemonDetail
 import com.rokas.showuswhatyougot.network.PokeApiService
 import java.util.Locale
 import retrofit2.Retrofit
@@ -28,6 +29,26 @@ object PokemonRepository {
                 imageUrl = OFFICIAL_ARTWORK_URL.format(pokemonId),
             )
         }.sortedBy(Pokemon::id)
+
+    suspend fun getPokemonDetail(id: Int): PokemonDetail {
+        val response = pokeApiService.getPokemonDetail(id)
+
+        return PokemonDetail(
+            id = response.id,
+            name = response.name.toDisplayName(),
+            imageUrl = response.sprites.other?.officialArtwork?.frontDefault
+                ?: response.sprites.frontDefault
+                ?: OFFICIAL_ARTWORK_URL.format(response.id),
+            types = response.types
+                .sortedBy { it.slot }
+                .map { it.type.name.toDisplayName() },
+            abilities = response.abilities
+                .map { it.ability.name.toDisplayName() }
+                .sorted(),
+            heightMeters = response.height / 10.0,
+            weightKilograms = response.weight / 10.0,
+        )
+    }
 
     private fun String.toDisplayName(): String =
         replace('-', ' ').split(' ').joinToString(" ") { part ->
