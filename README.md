@@ -26,6 +26,7 @@
   * Debug drawer (swipe from left edge)
   * HTTP monitoring (Chucker)
   * Real-time analytics event log
+  * Network throttle (3-second delay toggle)
 * Analytics engine
   * Supports multiple providers simultaneously
   * Stub provider (Logcat) + Debug provider (in-app log)
@@ -34,7 +35,6 @@
 TODO
 * Showkase
 * Caching
-* Network throttle
 * Design
 * Dark mode
 * CICD
