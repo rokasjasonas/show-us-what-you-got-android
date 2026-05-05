@@ -10,6 +10,12 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -295,21 +301,37 @@ private fun ShowUsWhatYouGotAppContent(
             },
         ) { innerPadding ->
             when (currentDestination) {
-                AppDestinations.HOME -> if (selectedPokemonId == null) {
-                    PokemonListScreen(
-                        uiState = pokemonUiState,
-                        onRetry = onRetryPokemonLoad,
-                        onLoadMore = onLoadMorePokemon,
-                        onPokemonClick = onPokemonSelected,
-                        modifier = Modifier.padding(innerPadding),
-                    )
-                } else {
-                    PokemonDetailScreen(
-                        uiState = pokemonDetailUiState,
-                        onBack = onBackFromPokemonDetail,
-                        onRetry = onRetryPokemonDetailLoad,
-                        modifier = Modifier.padding(innerPadding),
-                    )
+                AppDestinations.HOME -> {
+                    AnimatedContent(
+                        targetState = selectedPokemonId,
+                        transitionSpec = {
+                            if (targetState != null) {
+                                (slideInHorizontally { it } + fadeIn()) togetherWith
+                                        (slideOutHorizontally { -it / 3 } + fadeOut())
+                            } else {
+                                (slideInHorizontally { -it / 3 } + fadeIn()) togetherWith
+                                        (slideOutHorizontally { it } + fadeOut())
+                            }
+                        },
+                        label = "HomeDetailTransition",
+                    ) { pokemonId ->
+                        if (pokemonId == null) {
+                            PokemonListScreen(
+                                uiState = pokemonUiState,
+                                onRetry = onRetryPokemonLoad,
+                                onLoadMore = onLoadMorePokemon,
+                                onPokemonClick = onPokemonSelected,
+                                modifier = Modifier.padding(innerPadding),
+                            )
+                        } else {
+                            PokemonDetailScreen(
+                                uiState = pokemonDetailUiState,
+                                onBack = onBackFromPokemonDetail,
+                                onRetry = onRetryPokemonDetailLoad,
+                                modifier = Modifier.padding(innerPadding),
+                            )
+                        }
+                    }
                 }
 
                 AppDestinations.FAVORITES -> PlaceholderScreen(
