@@ -1,0 +1,7 @@
+<resources>
+    <string name="nav_home">Pradžia</string>
+    <string name="nav_favorites">Mėgstami</string>
+    <string name="nav_profile">Profilis</string>
+    <string name="favorites_placeholder_message">Išsaugok mėgstamus Pokémon čia.</string>
+</resources>
+

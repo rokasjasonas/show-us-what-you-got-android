@@ -9,6 +9,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -62,19 +63,28 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.runBlocking
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.compose.runtime.collectAsState
+import com.rokas.showuswhatyougot.storage.PreferencesManager
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var pokemonRepository: PokemonRepository
 
     @Inject
     lateinit var analyticsEngine: AnalyticsEngine
 
+    @Inject
+    lateinit var preferencesManager: com.rokas.showuswhatyougot.storage.PreferencesManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        restoreSavedLocale()
         enableEdgeToEdge()
         setContent {
             ShowUsWhatYouGotTheme {
@@ -82,8 +92,22 @@ class MainActivity : ComponentActivity() {
                     ShowUsWhatYouGotApp(
                         pokemonRepository = pokemonRepository,
                         analyticsEngine = analyticsEngine,
+                        preferencesManager = preferencesManager,
                     )
                 }
+            }
+        }
+    }
+
+    private fun restoreSavedLocale() {
+        val currentLocales = AppCompatDelegate.getApplicationLocales()
+        if (!currentLocales.isEmpty) return
+
+        runBlocking {
+            preferencesManager.selectedLanguage.firstOrNull()?.let { tag ->
+                AppCompatDelegate.setApplicationLocales(
+                    LocaleListCompat.forLanguageTags(tag)
+                )
             }
         }
     }
@@ -95,6 +119,7 @@ private const val POKEMON_PAGE_SIZE = 30
 fun ShowUsWhatYouGotApp(
     pokemonRepository: PokemonRepository,
     analyticsEngine: AnalyticsEngine,
+    preferencesManager: PreferencesManager,
 ) {
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
     var reloadKey by rememberSaveable { mutableIntStateOf(0) }
@@ -254,6 +279,9 @@ fun ShowUsWhatYouGotApp(
             analyticsEngine.trackEvent(AnalyticsEvent.TryAgainClick)
             reloadKey++
         },
+        onLanguageSelected = { tag ->
+            scope.launch { preferencesManager.setSelectedLanguage(tag) }
+        },
     )
 }
 
@@ -276,6 +304,7 @@ private fun ShowUsWhatYouGotAppContent(
     onBackFromPokemonDetail: () -> Unit,
     onRetryPokemonDetailLoad: () -> Unit,
     onRetryPokemonLoad: () -> Unit,
+    onLanguageSelected: (String) -> Unit,
 ) {
     val context = LocalContext.current
 
@@ -357,9 +386,8 @@ private fun ShowUsWhatYouGotAppContent(
                     modifier = Modifier.padding(innerPadding),
                 )
 
-                AppDestinations.PROFILE -> PlaceholderScreen(
-                    titleRes = R.string.nav_profile,
-                    messageRes = R.string.profile_placeholder_message,
+                AppDestinations.PROFILE -> com.rokas.showuswhatyougot.feature.profile.ProfileScreen(
+                    onLanguageSelected = onLanguageSelected,
                     modifier = Modifier.padding(innerPadding),
                 )
             }
@@ -474,6 +502,7 @@ private fun ShowUsWhatYouGotAppPreview() {
             onBackFromPokemonDetail = {},
             onRetryPokemonDetailLoad = {},
             onRetryPokemonLoad = {},
+            onLanguageSelected = {},
         )
     }
 }

@@ -1,0 +1,9 @@
+<resources>
+    <string name="profile_name">Ash Ketchum</string>
+    <string name="profile_trainer_subtitle">Pokémon treneris</string>
+    <string name="profile_image_description">Profilio nuotrauka</string>
+    <string name="profile_language_title">Kalba</string>
+    <string name="profile_language_english">English</string>
+    <string name="profile_language_lithuanian">Lietuvių</string>
+</resources>
+
