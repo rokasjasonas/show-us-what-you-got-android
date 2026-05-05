@@ -25,6 +25,4 @@ TODO
 * Caching
 * Language
 * Dark mode
-
-Missing
 * CICD
