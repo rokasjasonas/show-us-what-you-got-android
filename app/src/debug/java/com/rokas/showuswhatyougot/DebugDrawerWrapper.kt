@@ -16,14 +16,26 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.rokas.showuswhatyougot.debug.menu.DebugAnalyticsProvider
 import com.rokas.showuswhatyougot.debug.menu.DebugMenuContent
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.launch
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface DebugDrawerEntryPoint {
+    fun debugAnalyticsProvider(): DebugAnalyticsProvider
+}
 
 @Composable
 fun DebugDrawerWrapper(
@@ -33,6 +45,12 @@ fun DebugDrawerWrapper(
     val context = LocalContext.current
     val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
     val scope = rememberCoroutineScope()
+    val debugAnalyticsProvider = remember {
+        EntryPointAccessors.fromApplication(
+            context.applicationContext,
+            DebugDrawerEntryPoint::class.java,
+        ).debugAnalyticsProvider()
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -42,6 +60,8 @@ fun DebugDrawerWrapper(
                 DebugMenuContent(
                     appVersionName = packageInfo.versionName ?: "unknown",
                     appVersionCode = packageInfo.versionCode,
+                    analyticsEvents = debugAnalyticsProvider.events,
+                    onClearEvents = { debugAnalyticsProvider.clear() },
                 )
             }
         },
