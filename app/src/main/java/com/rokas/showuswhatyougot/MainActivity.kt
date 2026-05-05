@@ -21,7 +21,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -49,6 +49,10 @@ import com.rokas.showuswhatyougot.ui.pokemon.PokemonUiState
 import com.rokas.showuswhatyougot.ui.theme.ShowUsWhatYouGotTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.conflate
+import androidx.compose.runtime.collectAsState
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -175,6 +179,19 @@ fun ShowUsWhatYouGotApp(
         }
     }
 
+    LaunchedEffect(isNetworkAvailable) {
+        if (isNetworkAvailable) {
+            if (pokemonUiState.initialErrorMessage.isNotEmpty()) {
+                loadInitialPokemonPage()
+            } else if (pokemonUiState.appendErrorMessage.isNotEmpty()) {
+                loadNextPokemonPage()
+            }
+            if (selectedPokemonDetailState?.uiState is PokemonDetailUiState.Error) {
+                detailReloadKey++
+            }
+        }
+    }
+
     val pokemonDetailUiState =
         if (selectedPokemonDetailState?.pokemonId == selectedPokemonId) {
             selectedPokemonDetailState?.uiState ?: PokemonDetailUiState.Loading
@@ -292,36 +309,38 @@ private fun rememberNetworkAvailability(): Boolean {
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     }
 
-    var isNetworkAvailable by remember { mutableStateOf(connectivityManager.isCurrentlyConnected()) }
+    val isNetworkAvailable by remember(connectivityManager) {
+        callbackFlow {
+            trySend(connectivityManager.isCurrentlyConnected())
 
-    DisposableEffect(connectivityManager) {
-        val callback = object : ConnectivityManager.NetworkCallback() {
-            override fun onAvailable(network: Network) {
-                isNetworkAvailable = true
+            val callback = object : ConnectivityManager.NetworkCallback() {
+                override fun onAvailable(network: Network) {
+                    trySend(true)
+                }
+
+                override fun onLost(network: Network) {
+                    trySend(connectivityManager.isCurrentlyConnected())
+                }
+
+                override fun onCapabilitiesChanged(
+                    network: Network,
+                    networkCapabilities: NetworkCapabilities,
+                ) {
+                    trySend(networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET))
+                }
+
+                override fun onUnavailable() {
+                    trySend(false)
+                }
             }
 
-            override fun onLost(network: Network) {
-                isNetworkAvailable = connectivityManager.isCurrentlyConnected()
+            connectivityManager.registerDefaultNetworkCallback(callback)
+
+            awaitClose {
+                connectivityManager.unregisterNetworkCallback(callback)
             }
-
-            override fun onCapabilitiesChanged(
-                network: Network,
-                networkCapabilities: NetworkCapabilities,
-            ) {
-                isNetworkAvailable = networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-            }
-
-            override fun onUnavailable() {
-                isNetworkAvailable = false
-            }
-        }
-
-        connectivityManager.registerDefaultNetworkCallback(callback)
-
-        onDispose {
-            connectivityManager.unregisterNetworkCallback(callback)
-        }
-    }
+        }.conflate()
+    }.collectAsState(initial = connectivityManager.isCurrentlyConnected())
 
     return isNetworkAvailable
 }
