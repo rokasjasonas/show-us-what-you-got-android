@@ -72,7 +72,7 @@ import com.rokas.showuswhatyougot.storage.PreferencesManager
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
     @Inject
     lateinit var pokemonRepository: PokemonRepository
 
