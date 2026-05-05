@@ -35,9 +35,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import com.rokas.showuswhatyougot.data.PokemonRepository
+import com.rokas.showuswhatyougot.feature.details.PokemonDetailScreen
+import com.rokas.showuswhatyougot.feature.details.PokemonDetailUiState
 import com.rokas.showuswhatyougot.model.Pokemon
-import com.rokas.showuswhatyougot.ui.pokemon.PokemonDetailScreen
-import com.rokas.showuswhatyougot.ui.pokemon.PokemonDetailUiState
 import com.rokas.showuswhatyougot.ui.pokemon.PokemonListScreen
 import com.rokas.showuswhatyougot.ui.pokemon.PokemonUiState
 import com.rokas.showuswhatyougot.ui.theme.ShowUsWhatYouGotTheme

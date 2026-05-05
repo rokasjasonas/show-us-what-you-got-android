@@ -1,0 +1,13 @@
+<resources>
+    <string name="feature_details_error_generic">Please check your connection and try again.</string>
+    <string name="feature_details_error_title">Could not load Pokemon details</string>
+    <string name="feature_details_retry">Try again</string>
+    <string name="feature_details_back">Back</string>
+    <string name="feature_details_number">#%1$03d</string>
+    <string name="feature_details_about_title">About</string>
+    <string name="feature_details_types_title">Types</string>
+    <string name="feature_details_abilities_title">Abilities</string>
+    <string name="feature_details_height">Height: %1$.1f m</string>
+    <string name="feature_details_weight">Weight: %1$.1f kg</string>
+</resources>
+

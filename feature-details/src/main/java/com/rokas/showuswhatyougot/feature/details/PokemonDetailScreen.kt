@@ -1,4 +1,4 @@
-package com.rokas.showuswhatyougot.ui.pokemon
+package com.rokas.showuswhatyougot.feature.details
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,7 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.rokas.showuswhatyougot.R
+import com.rokas.showuswhatyougot.feature.details.R
 import com.rokas.showuswhatyougot.model.PokemonDetail
 import com.rokas.showuswhatyougot.ui.theme.ShowUsWhatYouGotTheme
 
@@ -86,7 +86,7 @@ private fun PokemonDetailErrorState(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val errorMessage = message.ifBlank { stringResource(R.string.pokemon_error_generic) }
+    val errorMessage = message.ifBlank { stringResource(R.string.feature_details_error_generic) }
 
     Box(
         modifier = modifier.fillMaxSize(),
@@ -99,7 +99,7 @@ private fun PokemonDetailErrorState(
         ) {
             DetailBackButton(onBack = onBack)
             Text(
-                text = stringResource(R.string.pokemon_details_error_title),
+                text = stringResource(R.string.feature_details_error_title),
                 style = MaterialTheme.typography.titleLarge,
             )
             Text(
@@ -107,7 +107,7 @@ private fun PokemonDetailErrorState(
                 style = MaterialTheme.typography.bodyMedium,
             )
             Button(onClick = onRetry) {
-                Text(text = stringResource(R.string.try_again))
+                Text(text = stringResource(R.string.feature_details_retry))
             }
         }
     }
@@ -145,7 +145,7 @@ private fun PokemonDetailContent(
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    text = stringResource(R.string.pokemon_number, pokemon.id),
+                    text = stringResource(R.string.feature_details_number, pokemon.id),
                     style = MaterialTheme.typography.titleMedium,
                 )
             }
@@ -153,10 +153,10 @@ private fun PokemonDetailContent(
 
         item {
             PokemonDetailInfoCard(
-                title = stringResource(R.string.pokemon_details_about_title),
+                title = stringResource(R.string.feature_details_about_title),
                 lines = listOf(
-                    stringResource(R.string.pokemon_details_height, pokemon.heightMeters),
-                    stringResource(R.string.pokemon_details_weight, pokemon.weightKilograms),
+                    stringResource(R.string.feature_details_height, pokemon.heightMeters),
+                    stringResource(R.string.feature_details_weight, pokemon.weightKilograms),
                 ),
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
@@ -164,7 +164,7 @@ private fun PokemonDetailContent(
 
         item {
             PokemonDetailInfoCard(
-                title = stringResource(R.string.pokemon_details_types_title),
+                title = stringResource(R.string.feature_details_types_title),
                 lines = pokemon.types,
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
@@ -172,7 +172,7 @@ private fun PokemonDetailContent(
 
         item {
             PokemonDetailInfoCard(
-                title = stringResource(R.string.pokemon_details_abilities_title),
+                title = stringResource(R.string.feature_details_abilities_title),
                 lines = pokemon.abilities,
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
@@ -219,7 +219,7 @@ private fun DetailBackButton(
         onClick = onBack,
         modifier = modifier,
     ) {
-        Text(text = stringResource(R.string.back))
+        Text(text = stringResource(R.string.feature_details_back))
     }
 }
 

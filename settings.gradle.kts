@@ -25,3 +25,4 @@ dependencyResolutionManagement {
 rootProject.name = "Show us what you got"
 include(":app")
 include(":common")
+include(":feature-details")

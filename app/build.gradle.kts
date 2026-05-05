@@ -40,6 +40,7 @@ android {
 
 dependencies {
     implementation(project(":common"))
+    implementation(project(":feature-details"))
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
