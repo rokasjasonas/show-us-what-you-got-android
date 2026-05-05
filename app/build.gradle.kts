@@ -39,6 +39,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":analytics"))
     implementation(project(":common"))
     implementation(project(":feature-details"))
     implementation(project(":network"))

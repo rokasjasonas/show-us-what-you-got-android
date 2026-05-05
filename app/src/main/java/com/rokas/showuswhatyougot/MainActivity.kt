@@ -39,6 +39,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
+import com.rokas.showuswhatyougot.analytics.AnalyticsEngine
+import com.rokas.showuswhatyougot.analytics.AnalyticsEvent
 import com.rokas.showuswhatyougot.data.PokemonRepository
 import com.rokas.showuswhatyougot.feature.details.PokemonDetailScreen
 import com.rokas.showuswhatyougot.feature.details.PokemonDetailUiState
@@ -60,6 +62,9 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var pokemonRepository: PokemonRepository
 
+    @Inject
+    lateinit var analyticsEngine: AnalyticsEngine
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -67,6 +72,7 @@ class MainActivity : ComponentActivity() {
             ShowUsWhatYouGotTheme {
                 ShowUsWhatYouGotApp(
                     pokemonRepository = pokemonRepository,
+                    analyticsEngine = analyticsEngine,
                 )
             }
         }
@@ -78,6 +84,7 @@ private const val POKEMON_PAGE_SIZE = 30
 @Composable
 fun ShowUsWhatYouGotApp(
     pokemonRepository: PokemonRepository,
+    analyticsEngine: AnalyticsEngine,
 ) {
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
     var reloadKey by rememberSaveable { mutableIntStateOf(0) }
@@ -203,6 +210,18 @@ fun ShowUsWhatYouGotApp(
         selectedPokemonId = null
     }
 
+    LaunchedEffect(currentDestination) {
+        if (currentDestination == AppDestinations.HOME) {
+            analyticsEngine.trackEvent(AnalyticsEvent.HomeScreenOpen)
+        }
+    }
+
+    LaunchedEffect(selectedPokemonId) {
+        selectedPokemonId?.let {
+            analyticsEngine.trackEvent(AnalyticsEvent.DetailsScreenOpen(it))
+        }
+    }
+
     ShowUsWhatYouGotAppContent(
         currentDestination = currentDestination,
         onDestinationChanged = { currentDestination = it },
@@ -212,12 +231,19 @@ fun ShowUsWhatYouGotApp(
         selectedPokemonId = selectedPokemonId,
         pokemonDetailUiState = pokemonDetailUiState,
         onPokemonSelected = {
+            analyticsEngine.trackEvent(AnalyticsEvent.PokemonClick(it))
             selectedPokemonId = it
             detailReloadKey = 0
         },
         onBackFromPokemonDetail = { selectedPokemonId = null },
-        onRetryPokemonDetailLoad = { detailReloadKey++ },
-        onRetryPokemonLoad = { reloadKey++ },
+        onRetryPokemonDetailLoad = {
+            analyticsEngine.trackEvent(AnalyticsEvent.TryAgainClick)
+            detailReloadKey++
+        },
+        onRetryPokemonLoad = {
+            analyticsEngine.trackEvent(AnalyticsEvent.TryAgainClick)
+            reloadKey++
+        },
     )
 }
 

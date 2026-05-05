@@ -24,6 +24,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "Show us what you got"
 include(":app")
+include(":analytics")
 include(":common")
 include(":feature-details")
 include(":network")
