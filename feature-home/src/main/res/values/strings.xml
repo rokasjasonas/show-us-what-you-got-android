@@ -1,0 +1,8 @@
+<resources>
+    <string name="pokemon_error_generic">Please check your connection and try again.</string>
+    <string name="pokemon_load_error_title">Could not load Pokemon</string>
+    <string name="try_again">Try again</string>
+    <string name="pokedex_title">Pokedex</string>
+    <string name="pokemon_list_subtitle">Showing %1$d Pokemon from PokeAPI</string>
+</resources>
+

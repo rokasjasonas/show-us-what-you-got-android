@@ -42,6 +42,7 @@ dependencies {
     implementation(project(":analytics"))
     implementation(project(":common"))
     implementation(project(":feature-details"))
+    implementation(project(":feature-home"))
     implementation(project(":network"))
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)

@@ -1,4 +1,4 @@
-package com.rokas.showuswhatyougot.ui.pokemon
+package com.rokas.showuswhatyougot.feature.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,7 +33,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
-import com.rokas.showuswhatyougot.R
 import com.rokas.showuswhatyougot.model.Pokemon
 import com.rokas.showuswhatyougot.ui.theme.ShowUsWhatYouGotTheme
 
@@ -297,7 +296,7 @@ private fun PokemonImagePlaceholder(
             CircularProgressIndicator(modifier = Modifier.size(28.dp))
         } else {
             Icon(
-                painter = painterResource(R.drawable.ic_account_box),
+                painter = painterResource(R.drawable.ic_image_placeholder),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(36.dp),

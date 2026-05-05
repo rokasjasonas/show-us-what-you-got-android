@@ -46,8 +46,8 @@ import com.rokas.showuswhatyougot.feature.details.PokemonDetailScreen
 import com.rokas.showuswhatyougot.feature.details.PokemonDetailUiState
 import com.rokas.showuswhatyougot.model.Pokemon
 import com.rokas.showuswhatyougot.ui.NoNetworkBanner
-import com.rokas.showuswhatyougot.ui.pokemon.PokemonListScreen
-import com.rokas.showuswhatyougot.ui.pokemon.PokemonUiState
+import com.rokas.showuswhatyougot.feature.home.PokemonListScreen
+import com.rokas.showuswhatyougot.feature.home.PokemonUiState
 import com.rokas.showuswhatyougot.ui.theme.ShowUsWhatYouGotTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
