@@ -21,6 +21,7 @@ android {
 
 dependencies {
     implementation(libs.google.hilt.android)
+    implementation(libs.squareup.okhttp)
     implementation(libs.squareup.retrofit)
     implementation(libs.squareup.retrofit.converter.gson)
     ksp(libs.google.hilt.compiler)

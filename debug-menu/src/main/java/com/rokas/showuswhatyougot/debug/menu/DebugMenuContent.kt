@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -31,6 +32,8 @@ fun DebugMenuContent(
     appVersionCode: Int,
     analyticsEvents: List<DebugAnalyticsEntry> = emptyList(),
     onClearEvents: () -> Unit = {},
+    isThrottleEnabled: Boolean = false,
+    onThrottleToggle: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -60,6 +63,34 @@ fun DebugMenuContent(
             Text(
                 text = stringResource(R.string.debug_menu_app_version_value, appVersionName, appVersionCode),
                 style = MaterialTheme.typography.bodyLarge,
+            )
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(8.dp))
+            HorizontalDivider()
+        }
+
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(R.string.debug_menu_throttle_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Switch(
+                    checked = isThrottleEnabled,
+                    onCheckedChange = onThrottleToggle,
+                )
+            }
+            Text(
+                text = stringResource(R.string.debug_menu_throttle_description),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
 

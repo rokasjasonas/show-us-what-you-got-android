@@ -10,6 +10,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -21,9 +22,13 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideRetrofit(@ApplicationContext context: Context): Retrofit {
+    fun provideRetrofit(
+        @ApplicationContext context: Context,
+        interceptors: Set<@JvmSuppressWildcards Interceptor>,
+    ): Retrofit {
         val client = OkHttpClient.Builder()
             .addInterceptor(ChuckerInterceptor(context))
+            .apply { interceptors.forEach { addInterceptor(it) } }
             .build()
 
         return Retrofit.Builder()

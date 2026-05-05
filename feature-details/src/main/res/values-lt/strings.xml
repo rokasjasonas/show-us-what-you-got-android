@@ -1,0 +1,13 @@
+<resources>
+    <string name="feature_details_error_generic">Patikrinkite ryšį ir bandykite dar kartą.</string>
+    <string name="feature_details_error_title">Nepavyko įkelti Pokémon detalių</string>
+    <string name="feature_details_retry">Bandyti dar kartą</string>
+    <string name="feature_details_back">Atgal</string>
+    <string name="feature_details_number">#%1$03d</string>
+    <string name="feature_details_about_title">Apie</string>
+    <string name="feature_details_types_title">Tipai</string>
+    <string name="feature_details_abilities_title">Gebėjimai</string>
+    <string name="feature_details_height">Ūgis: %1$.1f m</string>
+    <string name="feature_details_weight">Svoris: %1$.1f kg</string>
+</resources>
+

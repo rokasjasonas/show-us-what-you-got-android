@@ -25,6 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.rokas.showuswhatyougot.debug.menu.DebugAnalyticsProvider
 import com.rokas.showuswhatyougot.debug.menu.DebugMenuContent
+import com.rokas.showuswhatyougot.debug.menu.NetworkThrottleConfig
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -35,6 +36,7 @@ import kotlinx.coroutines.launch
 @InstallIn(SingletonComponent::class)
 interface DebugDrawerEntryPoint {
     fun debugAnalyticsProvider(): DebugAnalyticsProvider
+    fun networkThrottleConfig(): NetworkThrottleConfig
 }
 
 @Composable
@@ -45,12 +47,14 @@ fun DebugDrawerWrapper(
     val context = LocalContext.current
     val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
     val scope = rememberCoroutineScope()
-    val debugAnalyticsProvider = remember {
+    val entryPoint = remember {
         EntryPointAccessors.fromApplication(
             context.applicationContext,
             DebugDrawerEntryPoint::class.java,
-        ).debugAnalyticsProvider()
+        )
     }
+    val debugAnalyticsProvider = remember { entryPoint.debugAnalyticsProvider() }
+    val throttleConfig = remember { entryPoint.networkThrottleConfig() }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -62,6 +66,8 @@ fun DebugDrawerWrapper(
                     appVersionCode = packageInfo.versionCode,
                     analyticsEvents = debugAnalyticsProvider.events,
                     onClearEvents = { debugAnalyticsProvider.clear() },
+                    isThrottleEnabled = throttleConfig.enabled.value,
+                    onThrottleToggle = { throttleConfig.enabled.value = it },
                 )
             }
         },

@@ -5,5 +5,7 @@
     <string name="debug_menu_events_title">Analytics Events</string>
     <string name="debug_menu_clear">Clear</string>
     <string name="debug_menu_no_events">No events recorded yet.</string>
+    <string name="debug_menu_throttle_title">Network Throttle</string>
+    <string name="debug_menu_throttle_description">Adds a 3-second delay to every network request</string>
 </resources>
 
