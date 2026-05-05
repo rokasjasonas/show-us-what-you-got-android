@@ -21,6 +21,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -49,6 +50,8 @@ private enum class AppLanguage(val tag: String, val labelRes: Int) {
 @Composable
 fun ProfileScreen(
     onLanguageSelected: (String) -> Unit = {},
+    isDarkMode: Boolean = false,
+    onDarkModeToggled: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val locale = Locale.getDefault()
@@ -128,6 +131,34 @@ fun ProfileScreen(
                         },
                     )
                 }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = stringResource(R.string.profile_appearance_title),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = stringResource(R.string.profile_dark_mode_label),
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+                Switch(
+                    checked = isDarkMode,
+                    onCheckedChange = onDarkModeToggled,
+                )
             }
         }
     }

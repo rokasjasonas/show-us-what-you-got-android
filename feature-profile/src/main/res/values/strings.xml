@@ -5,5 +5,7 @@
     <string name="profile_language_title">Language</string>
     <string name="profile_language_english">English</string>
     <string name="profile_language_lithuanian">Lietuvių</string>
+    <string name="profile_appearance_title">Appearance</string>
+    <string name="profile_dark_mode_label">Dark mode</string>
 </resources>
 

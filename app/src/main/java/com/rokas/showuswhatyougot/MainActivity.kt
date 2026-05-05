@@ -19,6 +19,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -76,7 +77,9 @@ class MainActivity : ComponentActivity() {
         restoreSavedLocale()
         enableEdgeToEdge()
         setContent {
-            ShowUsWhatYouGotTheme {
+            val storedDarkMode by preferencesManager.darkModeEnabled.collectAsState(initial = null)
+            val systemDark = isSystemInDarkTheme()
+            ShowUsWhatYouGotTheme(darkTheme = storedDarkMode ?: systemDark) {
                 DebugDrawerWrapper {
                     ShowUsWhatYouGotApp(
                         preferencesManager = preferencesManager,
@@ -109,6 +112,9 @@ fun ShowUsWhatYouGotApp(
 
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
     val currentLanguageTag by preferencesManager.selectedLanguage.collectAsState(initial = null)
+    val systemDark = isSystemInDarkTheme()
+    val storedDarkMode by preferencesManager.darkModeEnabled.collectAsState(initial = null)
+    val isDarkMode = storedDarkMode ?: systemDark
     var selectedPokemonId by rememberSaveable { mutableStateOf<Int?>(null) }
     val scope = rememberCoroutineScope()
 
@@ -157,6 +163,10 @@ fun ShowUsWhatYouGotApp(
             scope.launch { preferencesManager.setSelectedLanguage(tag) }
         },
         currentLanguageTag = currentLanguageTag,
+        isDarkMode = isDarkMode,
+        onDarkModeToggled = { enabled ->
+            scope.launch { preferencesManager.setDarkModeEnabled(enabled) }
+        },
     )
 }
 
@@ -177,6 +187,8 @@ private fun ShowUsWhatYouGotAppContent(
     onRetryPokemonLoad: () -> Unit,
     onLanguageSelected: (String) -> Unit,
     currentLanguageTag: String?,
+    isDarkMode: Boolean,
+    onDarkModeToggled: (Boolean) -> Unit,
 ) {
     val context = LocalContext.current
 
@@ -257,6 +269,8 @@ private fun ShowUsWhatYouGotAppContent(
 
                 AppDestinations.PROFILE -> com.rokas.showuswhatyougot.feature.profile.ProfileScreen(
                     onLanguageSelected = onLanguageSelected,
+                    isDarkMode = isDarkMode,
+                    onDarkModeToggled = onDarkModeToggled,
                     modifier = Modifier.padding(innerPadding),
                 )
             }
@@ -383,6 +397,8 @@ private fun ShowUsWhatYouGotAppPreview() {
             onRetryPokemonLoad = {},
             onLanguageSelected = {},
             currentLanguageTag = null,
+            isDarkMode = false,
+            onDarkModeToggled = {},
         )
     }
 }

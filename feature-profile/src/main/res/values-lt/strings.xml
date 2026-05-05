@@ -5,5 +5,7 @@
     <string name="profile_language_title">Kalba</string>
     <string name="profile_language_english">English</string>
     <string name="profile_language_lithuanian">Lietuvių</string>
+    <string name="profile_appearance_title">Išvaizda</string>
+    <string name="profile_dark_mode_label">Tamsus režimas</string>
 </resources>
 
