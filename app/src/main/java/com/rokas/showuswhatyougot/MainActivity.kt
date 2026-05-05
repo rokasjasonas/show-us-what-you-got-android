@@ -10,6 +10,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.StringRes
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
@@ -29,12 +30,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
-
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -47,26 +46,24 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
+import androidx.core.os.LocaleListCompat
 import com.rokas.showuswhatyougot.feature.details.PokemonDetailScreen
 import com.rokas.showuswhatyougot.feature.details.PokemonDetailUiState
 import com.rokas.showuswhatyougot.feature.details.PokemonDetailViewModel
-import com.rokas.showuswhatyougot.model.Pokemon
-import com.rokas.showuswhatyougot.ui.NoNetworkBanner
 import com.rokas.showuswhatyougot.feature.list.PokemonListScreen
 import com.rokas.showuswhatyougot.feature.list.PokemonListViewModel
 import com.rokas.showuswhatyougot.feature.list.PokemonUiState
+import com.rokas.showuswhatyougot.model.Pokemon
+import com.rokas.showuswhatyougot.storage.PreferencesManager
+import com.rokas.showuswhatyougot.ui.NoNetworkBanner
+import com.rokas.showuswhatyougot.ui.theme.ShowUsWhatYouGotTheme
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.os.LocaleListCompat
-import androidx.compose.runtime.collectAsState
-import com.rokas.showuswhatyougot.storage.PreferencesManager
-import com.rokas.showuswhatyougot.ui.theme.ShowUsWhatYouGotTheme
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -199,8 +196,7 @@ private fun ShowUsWhatYouGotAppContent(
                     onClick = { onDestinationChanged(it) },
                 )
             }
-        }
-    ) {
+        }) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = {
@@ -216,11 +212,9 @@ private fun ShowUsWhatYouGotAppContent(
                             targetState = selectedPokemonId,
                             transitionSpec = {
                                 if (targetState != null) {
-                                    (slideInHorizontally { it } + fadeIn()) togetherWith
-                                            (slideOutHorizontally { -it / 3 } + fadeOut())
+                                    (slideInHorizontally { it } + fadeIn()) togetherWith (slideOutHorizontally { -it / 3 } + fadeOut())
                                 } else {
-                                    (slideInHorizontally { -it / 3 } + fadeIn()) togetherWith
-                                            (slideOutHorizontally { it } + fadeOut())
+                                    (slideInHorizontally { -it / 3 } + fadeIn()) togetherWith (slideOutHorizontally { it } + fadeOut())
                                 }
                             },
                             label = "HomeDetailTransition",
@@ -323,8 +317,10 @@ enum class AppDestinations(
     @param:StringRes val labelRes: Int,
     val icon: Int,
 ) {
-    HOME(R.string.nav_home, R.drawable.ic_home),
-    FAVORITES(R.string.nav_favorites, R.drawable.ic_favorite),
+    HOME(R.string.nav_home, R.drawable.ic_home), FAVORITES(
+        R.string.nav_favorites,
+        R.drawable.ic_favorite
+    ),
     PROFILE(R.string.nav_profile, R.drawable.ic_account_box),
 }
 
@@ -365,8 +361,16 @@ private fun ShowUsWhatYouGotAppPreview() {
             isNetworkAvailable = false,
             pokemonUiState = PokemonUiState(
                 pokemon = listOf(
-                    Pokemon(25, "Pikachu", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"),
-                    Pokemon(39, "Jigglypuff", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/39.png"),
+                    Pokemon(
+                        25,
+                        "Pikachu",
+                        "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"
+                    ),
+                    Pokemon(
+                        39,
+                        "Jigglypuff",
+                        "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/39.png"
+                    ),
                 ),
                 nextOffset = 30,
             ),
