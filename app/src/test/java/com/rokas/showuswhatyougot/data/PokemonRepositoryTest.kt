@@ -1,5 +1,7 @@
 package com.rokas.showuswhatyougot.data
 
+import com.rokas.showuswhatyougot.network.data.PokemonRepository
+
 import com.rokas.showuswhatyougot.network.NamedApiResourceResponse
 import com.rokas.showuswhatyougot.network.PokeApiService
 import com.rokas.showuswhatyougot.network.PokemonAbilitySlotResponse

@@ -1,11 +1,10 @@
-package com.rokas.showuswhatyougot.viewmodel
+package com.rokas.showuswhatyougot.feature.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rokas.showuswhatyougot.analytics.AnalyticsEngine
 import com.rokas.showuswhatyougot.analytics.AnalyticsEvent
-import com.rokas.showuswhatyougot.data.PokemonRepository
-import com.rokas.showuswhatyougot.feature.list.PokemonUiState
+import com.rokas.showuswhatyougot.network.data.PokemonRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

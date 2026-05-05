@@ -1,4 +1,4 @@
-package com.rokas.showuswhatyougot.data
+package com.rokas.showuswhatyougot.network.data
 
 import com.rokas.showuswhatyougot.model.Pokemon
 import com.rokas.showuswhatyougot.model.PokemonDetail

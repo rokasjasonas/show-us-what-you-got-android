@@ -47,16 +47,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
-import com.rokas.showuswhatyougot.analytics.AnalyticsEngine
-import com.rokas.showuswhatyougot.analytics.AnalyticsEvent
-import com.rokas.showuswhatyougot.data.PokemonRepository
 import com.rokas.showuswhatyougot.feature.details.PokemonDetailScreen
 import com.rokas.showuswhatyougot.feature.details.PokemonDetailUiState
+import com.rokas.showuswhatyougot.feature.details.PokemonDetailViewModel
 import com.rokas.showuswhatyougot.model.Pokemon
 import com.rokas.showuswhatyougot.ui.NoNetworkBanner
 import com.rokas.showuswhatyougot.feature.list.PokemonListScreen
+import com.rokas.showuswhatyougot.feature.list.PokemonListViewModel
 import com.rokas.showuswhatyougot.feature.list.PokemonUiState
-import com.rokas.showuswhatyougot.ui.theme.ShowUsWhatYouGotTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.channels.awaitClose
@@ -68,16 +66,11 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import androidx.compose.runtime.collectAsState
 import com.rokas.showuswhatyougot.storage.PreferencesManager
+import com.rokas.showuswhatyougot.ui.theme.ShowUsWhatYouGotTheme
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    @Inject
-    lateinit var pokemonRepository: PokemonRepository
-
-    @Inject
-    lateinit var analyticsEngine: AnalyticsEngine
-
     @Inject
     lateinit var preferencesManager: com.rokas.showuswhatyougot.storage.PreferencesManager
 
@@ -89,8 +82,6 @@ class MainActivity : ComponentActivity() {
             ShowUsWhatYouGotTheme {
                 DebugDrawerWrapper {
                     ShowUsWhatYouGotApp(
-                        pokemonRepository = pokemonRepository,
-                        analyticsEngine = analyticsEngine,
                         preferencesManager = preferencesManager,
                     )
                 }
@@ -112,16 +103,12 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private const val POKEMON_PAGE_SIZE = 30
-
 @Composable
 fun ShowUsWhatYouGotApp(
-    pokemonRepository: PokemonRepository,
-    analyticsEngine: AnalyticsEngine,
     preferencesManager: PreferencesManager,
 ) {
-    val listViewModel: com.rokas.showuswhatyougot.viewmodel.PokemonListViewModel = androidx.hilt.navigation.compose.hiltViewModel()
-    val detailViewModel: com.rokas.showuswhatyougot.viewmodel.PokemonDetailViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+    val listViewModel: PokemonListViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+    val detailViewModel: PokemonDetailViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
     val currentLanguageTag by preferencesManager.selectedLanguage.collectAsState(initial = null)
