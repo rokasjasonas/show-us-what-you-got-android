@@ -95,7 +95,7 @@ private fun PokemonErrorState(
     val errorMessage = message.ifBlank { stringResource(R.string.pokemon_error_generic) }
 
     Box(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize().padding(16.dp),
         contentAlignment = Alignment.Center,
     ) {
         Column(

@@ -1,5 +1,9 @@
 package com.rokas.showuswhatyougot
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -17,6 +21,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -38,6 +43,7 @@ import com.rokas.showuswhatyougot.data.PokemonRepository
 import com.rokas.showuswhatyougot.feature.details.PokemonDetailScreen
 import com.rokas.showuswhatyougot.feature.details.PokemonDetailUiState
 import com.rokas.showuswhatyougot.model.Pokemon
+import com.rokas.showuswhatyougot.ui.NoNetworkBanner
 import com.rokas.showuswhatyougot.ui.pokemon.PokemonListScreen
 import com.rokas.showuswhatyougot.ui.pokemon.PokemonUiState
 import com.rokas.showuswhatyougot.ui.theme.ShowUsWhatYouGotTheme
@@ -144,6 +150,8 @@ fun ShowUsWhatYouGotApp(
         loadInitialPokemonPage()
     }
 
+    val isNetworkAvailable = rememberNetworkAvailability()
+
     val selectedPokemonDetailState by produceState<SelectedPokemonDetailState?>(
         initialValue = null,
         key1 = selectedPokemonId,
@@ -181,6 +189,7 @@ fun ShowUsWhatYouGotApp(
     ShowUsWhatYouGotAppContent(
         currentDestination = currentDestination,
         onDestinationChanged = { currentDestination = it },
+        isNetworkAvailable = isNetworkAvailable,
         pokemonUiState = pokemonUiState,
         onLoadMorePokemon = ::loadNextPokemonPage,
         selectedPokemonId = selectedPokemonId,
@@ -204,6 +213,7 @@ private data class SelectedPokemonDetailState(
 private fun ShowUsWhatYouGotAppContent(
     currentDestination: AppDestinations,
     onDestinationChanged: (AppDestinations) -> Unit,
+    isNetworkAvailable: Boolean,
     pokemonUiState: PokemonUiState,
     onLoadMorePokemon: () -> Unit,
     selectedPokemonId: Int?,
@@ -233,7 +243,14 @@ private fun ShowUsWhatYouGotAppContent(
             }
         }
     ) {
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            topBar = {
+                if (!isNetworkAvailable) {
+                    NoNetworkBanner()
+                }
+            },
+        ) { innerPadding ->
             when (currentDestination) {
                 AppDestinations.HOME -> if (selectedPokemonId == null) {
                     PokemonListScreen(
@@ -266,6 +283,53 @@ private fun ShowUsWhatYouGotAppContent(
             }
         }
     }
+}
+
+@Composable
+private fun rememberNetworkAvailability(): Boolean {
+    val context = LocalContext.current.applicationContext
+    val connectivityManager = remember(context) {
+        context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    }
+
+    var isNetworkAvailable by remember { mutableStateOf(connectivityManager.isCurrentlyConnected()) }
+
+    DisposableEffect(connectivityManager) {
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                isNetworkAvailable = true
+            }
+
+            override fun onLost(network: Network) {
+                isNetworkAvailable = connectivityManager.isCurrentlyConnected()
+            }
+
+            override fun onCapabilitiesChanged(
+                network: Network,
+                networkCapabilities: NetworkCapabilities,
+            ) {
+                isNetworkAvailable = networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            }
+
+            override fun onUnavailable() {
+                isNetworkAvailable = false
+            }
+        }
+
+        connectivityManager.registerDefaultNetworkCallback(callback)
+
+        onDispose {
+            connectivityManager.unregisterNetworkCallback(callback)
+        }
+    }
+
+    return isNetworkAvailable
+}
+
+private fun ConnectivityManager.isCurrentlyConnected(): Boolean {
+    val activeNetwork = activeNetwork ?: return false
+    val capabilities = getNetworkCapabilities(activeNetwork) ?: return false
+    return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
 }
 
 enum class AppDestinations(
@@ -311,6 +375,7 @@ private fun ShowUsWhatYouGotAppPreview() {
         ShowUsWhatYouGotAppContent(
             currentDestination = AppDestinations.HOME,
             onDestinationChanged = {},
+            isNetworkAvailable = false,
             pokemonUiState = PokemonUiState(
                 pokemon = listOf(
                     Pokemon(25, "Pikachu", "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"),
