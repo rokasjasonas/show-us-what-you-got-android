@@ -11,6 +11,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -258,6 +260,7 @@ private data class SelectedPokemonDetailState(
     val uiState: PokemonDetailUiState,
 )
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun ShowUsWhatYouGotAppContent(
     currentDestination: AppDestinations,
@@ -302,34 +305,46 @@ private fun ShowUsWhatYouGotAppContent(
         ) { innerPadding ->
             when (currentDestination) {
                 AppDestinations.HOME -> {
-                    AnimatedContent(
-                        targetState = selectedPokemonId,
-                        transitionSpec = {
-                            if (targetState != null) {
-                                (slideInHorizontally { it } + fadeIn()) togetherWith
-                                        (slideOutHorizontally { -it / 3 } + fadeOut())
+                    SharedTransitionLayout {
+                        AnimatedContent(
+                            targetState = selectedPokemonId,
+                            transitionSpec = {
+                                if (targetState != null) {
+                                    (slideInHorizontally { it } + fadeIn()) togetherWith
+                                            (slideOutHorizontally { -it / 3 } + fadeOut())
+                                } else {
+                                    (slideInHorizontally { -it / 3 } + fadeIn()) togetherWith
+                                            (slideOutHorizontally { it } + fadeOut())
+                                }
+                            },
+                            label = "HomeDetailTransition",
+                        ) { pokemonId ->
+                            if (pokemonId == null) {
+                                PokemonListScreen(
+                                    uiState = pokemonUiState,
+                                    onRetry = onRetryPokemonLoad,
+                                    onLoadMore = onLoadMorePokemon,
+                                    onPokemonClick = onPokemonSelected,
+                                    modifier = Modifier.padding(innerPadding),
+                                    imageModifier = { id ->
+                                        Modifier.sharedElement(
+                                            rememberSharedContentState(key = "pokemon_image_$id"),
+                                            animatedVisibilityScope = this@AnimatedContent,
+                                        )
+                                    },
+                                )
                             } else {
-                                (slideInHorizontally { -it / 3 } + fadeIn()) togetherWith
-                                        (slideOutHorizontally { it } + fadeOut())
+                                PokemonDetailScreen(
+                                    uiState = pokemonDetailUiState,
+                                    onBack = onBackFromPokemonDetail,
+                                    onRetry = onRetryPokemonDetailLoad,
+                                    modifier = Modifier.padding(innerPadding),
+                                    imageModifier = Modifier.sharedElement(
+                                        rememberSharedContentState(key = "pokemon_image_$pokemonId"),
+                                        animatedVisibilityScope = this@AnimatedContent,
+                                    ),
+                                )
                             }
-                        },
-                        label = "HomeDetailTransition",
-                    ) { pokemonId ->
-                        if (pokemonId == null) {
-                            PokemonListScreen(
-                                uiState = pokemonUiState,
-                                onRetry = onRetryPokemonLoad,
-                                onLoadMore = onLoadMorePokemon,
-                                onPokemonClick = onPokemonSelected,
-                                modifier = Modifier.padding(innerPadding),
-                            )
-                        } else {
-                            PokemonDetailScreen(
-                                uiState = pokemonDetailUiState,
-                                onBack = onBackFromPokemonDetail,
-                                onRetry = onRetryPokemonDetailLoad,
-                                modifier = Modifier.padding(innerPadding),
-                            )
                         }
                     }
                 }

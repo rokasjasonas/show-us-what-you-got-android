@@ -39,6 +39,7 @@ fun PokemonDetailScreen(
     onBack: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
+    imageModifier: Modifier = Modifier,
 ) {
     when (uiState) {
         PokemonDetailUiState.Loading -> PokemonDetailLoadingState(
@@ -54,6 +55,7 @@ fun PokemonDetailScreen(
         is PokemonDetailUiState.Success -> PokemonDetailContent(
             pokemon = uiState.pokemon,
             onBack = onBack,
+            imageModifier = imageModifier,
             modifier = modifier,
         )
     }
@@ -117,6 +119,7 @@ private fun PokemonDetailErrorState(
 private fun PokemonDetailContent(
     pokemon: PokemonDetail,
     onBack: () -> Unit,
+    imageModifier: Modifier = Modifier,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -134,7 +137,7 @@ private fun PokemonDetailContent(
                 AsyncImage(
                     model = pokemon.imageUrl,
                     contentDescription = pokemon.name,
-                    modifier = Modifier
+                    modifier = imageModifier
                         .size(220.dp)
                         .align(Alignment.CenterHorizontally),
                     contentScale = ContentScale.Fit,

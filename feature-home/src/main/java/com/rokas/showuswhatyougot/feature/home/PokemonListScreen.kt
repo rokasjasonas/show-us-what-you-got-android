@@ -52,6 +52,7 @@ fun PokemonListScreen(
     onLoadMore: () -> Unit,
     onPokemonClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    imageModifier: @Composable (pokemonId: Int) -> Modifier = { Modifier },
 ) {
     when {
         uiState.isInitialLoading && uiState.pokemon.isEmpty() -> PokemonLoadingState(modifier = modifier)
@@ -70,6 +71,7 @@ fun PokemonListScreen(
             onLoadMore = onLoadMore,
             onRetryAppend = onLoadMore,
             onPokemonClick = onPokemonClick,
+            imageModifier = imageModifier,
             modifier = modifier,
         )
     }
@@ -125,6 +127,7 @@ private fun PokemonContent(
     onLoadMore: () -> Unit,
     onRetryAppend: () -> Unit,
     onPokemonClick: (Int) -> Unit,
+    imageModifier: @Composable (pokemonId: Int) -> Modifier,
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
@@ -176,6 +179,7 @@ private fun PokemonContent(
             PokemonRow(
                 pokemon = item,
                 onClick = { onPokemonClick(item.id) },
+                imageModifier = imageModifier(item.id),
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
         }
@@ -237,6 +241,7 @@ private fun PokemonAppendError(
 private fun PokemonRow(
     pokemon: Pokemon,
     onClick: () -> Unit,
+    imageModifier: Modifier = Modifier,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -254,7 +259,7 @@ private fun PokemonRow(
             SubcomposeAsyncImage(
                 model = pokemon.imageUrl,
                 contentDescription = pokemon.name,
-                modifier = Modifier.size(88.dp),
+                modifier = imageModifier.size(88.dp),
                 contentScale = ContentScale.Fit,
                 loading = {
                     PokemonImagePlaceholder(isLoading = true)
