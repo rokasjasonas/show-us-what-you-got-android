@@ -1,0 +1,8 @@
+<resources>
+    <string name="pokemon_error_generic">Patikrinkite ryšį ir bandykite dar kartą.</string>
+    <string name="pokemon_load_error_title">Nepavyko įkelti Pokémon</string>
+    <string name="try_again">Bandyti dar kartą</string>
+    <string name="pokedex_title">Pokédex</string>
+    <string name="pokemon_list_subtitle">Rodoma %1$d Pokémon iš PokeAPI</string>
+</resources>
+

@@ -23,6 +23,9 @@
 TODO
 * Showkase
 * Caching
+* MVVM
+* Network throttle
+* Design
 * Language
 * Dark mode
 * CICD

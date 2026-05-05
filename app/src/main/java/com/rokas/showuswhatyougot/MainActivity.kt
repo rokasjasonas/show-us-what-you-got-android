@@ -9,7 +9,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -122,6 +121,7 @@ fun ShowUsWhatYouGotApp(
     preferencesManager: PreferencesManager,
 ) {
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
+    val currentLanguageTag by preferencesManager.selectedLanguage.collectAsState(initial = null)
     var reloadKey by rememberSaveable { mutableIntStateOf(0) }
     var selectedPokemonId by rememberSaveable { mutableStateOf<Int?>(null) }
     var detailReloadKey by rememberSaveable { mutableIntStateOf(0) }
@@ -282,6 +282,7 @@ fun ShowUsWhatYouGotApp(
         onLanguageSelected = { tag ->
             scope.launch { preferencesManager.setSelectedLanguage(tag) }
         },
+        currentLanguageTag = currentLanguageTag,
     )
 }
 
@@ -305,6 +306,7 @@ private fun ShowUsWhatYouGotAppContent(
     onRetryPokemonDetailLoad: () -> Unit,
     onRetryPokemonLoad: () -> Unit,
     onLanguageSelected: (String) -> Unit,
+    currentLanguageTag: String?,
 ) {
     val context = LocalContext.current
 
@@ -503,6 +505,7 @@ private fun ShowUsWhatYouGotAppPreview() {
             onRetryPokemonDetailLoad = {},
             onRetryPokemonLoad = {},
             onLanguageSelected = {},
+            currentLanguageTag = null,
         )
     }
 }

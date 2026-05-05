@@ -38,6 +38,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
+import java.util.Locale
 import kotlin.jvm.java
 
 private enum class AppLanguage(val tag: String, val labelRes: Int) {
@@ -50,12 +51,11 @@ fun ProfileScreen(
     onLanguageSelected: (String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    val currentLocale = AppCompatDelegate.getApplicationLocales()
-    var selectedLanguage by remember {
-        val tag = currentLocale.toLanguageTags()
+    val locale = Locale.getDefault()
+    var selectedLanguage by remember(locale) {
         mutableStateOf(
             when {
-                tag.startsWith("lt") -> AppLanguage.LITHUANIAN
+                locale.language.startsWith("lt") -> AppLanguage.LITHUANIAN
                 else -> AppLanguage.ENGLISH
             }
         )
