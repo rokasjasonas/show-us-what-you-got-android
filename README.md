@@ -3,7 +3,7 @@
 * Screens
   * List - Pokédex list from PokeAPI with images and pagination
   * Details - Pokémon details (stats, types, abilities) with shared element transition
-  * Profile - User profile with language settings (English/Lithuanian)
+  * Profile - User profile with language settings (English/Lithuanian) and dark mode toggle
 * Modules
   * [analytics](analytics) - Analytics engine with pluggable providers
   * [app](app) - Main app module, ViewModels, DI setup
@@ -22,6 +22,7 @@
   * Pagination with auto-load on scroll
   * No network banner with auto-retry on reconnect
   * Language switching (EN/LT) persisted to DataStore
+  * Dark mode toggle persisted to DataStore (falls back to system theme)
 * Debug mode
   * Debug drawer (swipe from left edge)
   * HTTP monitoring (Chucker)
@@ -36,5 +37,4 @@ TODO
 * Showkase
 * Caching
 * Design
-* Dark mode
 * CICD
