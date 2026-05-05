@@ -26,6 +26,7 @@ rootProject.name = "Show us what you got"
 include(":app")
 include(":analytics")
 include(":common")
+include(":debug-menu")
 include(":feature-details")
 include(":feature-home")
 include(":network")

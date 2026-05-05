@@ -78,10 +78,12 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ShowUsWhatYouGotTheme {
-                ShowUsWhatYouGotApp(
-                    pokemonRepository = pokemonRepository,
-                    analyticsEngine = analyticsEngine,
-                )
+                DebugDrawerWrapper {
+                    ShowUsWhatYouGotApp(
+                        pokemonRepository = pokemonRepository,
+                        analyticsEngine = analyticsEngine,
+                    )
+                }
             }
         }
     }
