@@ -120,141 +120,38 @@ fun ShowUsWhatYouGotApp(
     analyticsEngine: AnalyticsEngine,
     preferencesManager: PreferencesManager,
 ) {
+    val listViewModel: com.rokas.showuswhatyougot.viewmodel.PokemonListViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+    val detailViewModel: com.rokas.showuswhatyougot.viewmodel.PokemonDetailViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
     val currentLanguageTag by preferencesManager.selectedLanguage.collectAsState(initial = null)
-    var reloadKey by rememberSaveable { mutableIntStateOf(0) }
     var selectedPokemonId by rememberSaveable { mutableStateOf<Int?>(null) }
-    var detailReloadKey by rememberSaveable { mutableIntStateOf(0) }
-    var pokemonUiState by remember {
-        mutableStateOf(
-            PokemonUiState(
-                isInitialLoading = true,
-                nextOffset = 0,
-            )
-        )
-    }
     val scope = rememberCoroutineScope()
 
-    suspend fun loadInitialPokemonPage() {
-        pokemonUiState = PokemonUiState(
-            isInitialLoading = true,
-            nextOffset = 0,
-        )
-
-        pokemonUiState = try {
-            val page = pokemonRepository.getPokemonPage(
-                limit = POKEMON_PAGE_SIZE,
-                offset = 0,
-            )
-            PokemonUiState(
-                pokemon = page.pokemon,
-                nextOffset = page.nextOffset,
-            )
-        } catch (exception: Exception) {
-            PokemonUiState(
-                initialErrorMessage = exception.message.orEmpty(),
-                nextOffset = 0,
-            )
-        }
-    }
-
-    fun loadNextPokemonPage() {
-        val currentState = pokemonUiState
-        val nextOffset = currentState.nextOffset ?: return
-
-        if (currentState.isInitialLoading || currentState.isAppending) {
-            return
-        }
-
-        pokemonUiState = currentState.copy(
-            isAppending = true,
-            appendErrorMessage = "",
-        )
-
-        scope.launch {
-            pokemonUiState = try {
-                val page = pokemonRepository.getPokemonPage(
-                    limit = POKEMON_PAGE_SIZE,
-                    offset = nextOffset,
-                )
-                currentState.copy(
-                    pokemon = currentState.pokemon + page.pokemon,
-                    isAppending = false,
-                    appendErrorMessage = "",
-                    nextOffset = page.nextOffset,
-                )
-            } catch (exception: Exception) {
-                currentState.copy(
-                    isAppending = false,
-                    appendErrorMessage = exception.message.orEmpty(),
-                )
-            }
-        }
-    }
-
-    LaunchedEffect(reloadKey) {
-        loadInitialPokemonPage()
-    }
+    val pokemonUiState by listViewModel.uiState.collectAsState()
+    val pokemonDetailUiState by detailViewModel.uiState.collectAsState()
 
     val isNetworkAvailable = rememberNetworkAvailability()
 
-    val selectedPokemonDetailState by produceState<SelectedPokemonDetailState?>(
-        initialValue = null,
-        key1 = selectedPokemonId,
-        key2 = detailReloadKey,
-    ) {
-        val pokemonId = selectedPokemonId ?: return@produceState
-        value = SelectedPokemonDetailState(
-            pokemonId = pokemonId,
-            uiState = PokemonDetailUiState.Loading,
-        )
-        value = try {
-            SelectedPokemonDetailState(
-                pokemonId = pokemonId,
-                uiState = PokemonDetailUiState.Success(pokemonRepository.getPokemonDetail(pokemonId)),
-            )
-        } catch (exception: Exception) {
-            SelectedPokemonDetailState(
-                pokemonId = pokemonId,
-                uiState = PokemonDetailUiState.Error(exception.message.orEmpty()),
-            )
-        }
-    }
-
     LaunchedEffect(isNetworkAvailable) {
         if (isNetworkAvailable) {
-            if (pokemonUiState.initialErrorMessage.isNotEmpty()) {
-                loadInitialPokemonPage()
-            } else if (pokemonUiState.appendErrorMessage.isNotEmpty()) {
-                loadNextPokemonPage()
-            }
-            if (selectedPokemonDetailState?.uiState is PokemonDetailUiState.Error) {
-                detailReloadKey++
-            }
-        }
-    }
-
-    val pokemonDetailUiState =
-        if (selectedPokemonDetailState?.pokemonId == selectedPokemonId) {
-            selectedPokemonDetailState?.uiState ?: PokemonDetailUiState.Loading
-        } else {
-            PokemonDetailUiState.Loading
-        }
-
-    BackHandler(enabled = selectedPokemonId != null) {
-        selectedPokemonId = null
-    }
-
-    LaunchedEffect(currentDestination) {
-        if (currentDestination == AppDestinations.HOME) {
-            analyticsEngine.trackEvent(AnalyticsEvent.HomeScreenOpen)
+            listViewModel.onNetworkRestored()
+            detailViewModel.onNetworkRestored()
         }
     }
 
     LaunchedEffect(selectedPokemonId) {
-        selectedPokemonId?.let {
-            analyticsEngine.trackEvent(AnalyticsEvent.DetailsScreenOpen(it))
+        selectedPokemonId?.let { detailViewModel.loadPokemon(it) }
+    }
+
+    LaunchedEffect(currentDestination) {
+        if (currentDestination == AppDestinations.HOME) {
+            listViewModel.onScreenOpened()
         }
+    }
+
+    BackHandler(enabled = selectedPokemonId != null) {
+        selectedPokemonId = null
     }
 
     ShowUsWhatYouGotAppContent(
@@ -262,23 +159,16 @@ fun ShowUsWhatYouGotApp(
         onDestinationChanged = { currentDestination = it },
         isNetworkAvailable = isNetworkAvailable,
         pokemonUiState = pokemonUiState,
-        onLoadMorePokemon = ::loadNextPokemonPage,
+        onLoadMorePokemon = { listViewModel.loadNextPage() },
         selectedPokemonId = selectedPokemonId,
         pokemonDetailUiState = pokemonDetailUiState,
         onPokemonSelected = {
-            analyticsEngine.trackEvent(AnalyticsEvent.PokemonClick(it))
+            listViewModel.onPokemonClick(it)
             selectedPokemonId = it
-            detailReloadKey = 0
         },
         onBackFromPokemonDetail = { selectedPokemonId = null },
-        onRetryPokemonDetailLoad = {
-            analyticsEngine.trackEvent(AnalyticsEvent.TryAgainClick)
-            detailReloadKey++
-        },
-        onRetryPokemonLoad = {
-            analyticsEngine.trackEvent(AnalyticsEvent.TryAgainClick)
-            reloadKey++
-        },
+        onRetryPokemonDetailLoad = { detailViewModel.retry() },
+        onRetryPokemonLoad = { listViewModel.retry() },
         onLanguageSelected = { tag ->
             scope.launch { preferencesManager.setSelectedLanguage(tag) }
         },
@@ -286,10 +176,6 @@ fun ShowUsWhatYouGotApp(
     )
 }
 
-private data class SelectedPokemonDetailState(
-    val pokemonId: Int,
-    val uiState: PokemonDetailUiState,
-)
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
