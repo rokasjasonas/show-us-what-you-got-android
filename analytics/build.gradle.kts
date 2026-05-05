@@ -22,6 +22,7 @@ android {
 dependencies {
     implementation(libs.google.hilt.android)
     ksp(libs.google.hilt.compiler)
+    testImplementation(libs.junit)
 }
 
 
