@@ -1,5 +1,6 @@
-package com.rokas.showuswhatyougot.feature.home
+package com.rokas.showuswhatyougot.feature.list
 
+import com.rokas.showuswhatyougot.feature.list.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column

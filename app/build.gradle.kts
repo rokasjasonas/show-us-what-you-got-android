@@ -42,7 +42,7 @@ dependencies {
     implementation(project(":analytics"))
     implementation(project(":common"))
     implementation(project(":feature-details"))
-    implementation(project(":feature-home"))
+    implementation(project(":feature-list"))
     implementation(project(":feature-profile"))
     implementation(project(":network"))
     implementation(project(":storage"))

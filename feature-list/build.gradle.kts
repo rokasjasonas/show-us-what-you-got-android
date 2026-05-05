@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.rokas.showuswhatyougot.feature.home"
+    namespace = "com.rokas.showuswhatyougot.feature.list"
     compileSdk = 36
 
     defaultConfig {
@@ -30,4 +30,3 @@ dependencies {
     implementation(libs.coil.compose)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
-
