@@ -29,5 +29,8 @@ dependencies {
     ksp(libs.google.hilt.compiler)
     debugImplementation(libs.chucker.library)
     releaseImplementation(libs.chucker.library.no.op)
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mockk)
 }
 

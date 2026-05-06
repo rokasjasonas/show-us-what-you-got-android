@@ -32,6 +32,7 @@ class PokemonDetailViewModelTest {
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
+        coEvery { repository.getCachedPokemonDetail(any()) } returns null
         vm = PokemonDetailViewModel(repository, analyticsEngine)
     }
 
@@ -70,6 +71,19 @@ class PokemonDetailViewModelTest {
         advanceUntilIdle()
 
         assertTrue(vm.uiState.value is PokemonDetailUiState.Error)
+    }
+
+    @Test
+    fun `loadPokemon shows cached data when network fails`() = runTest {
+        coEvery { repository.getCachedPokemonDetail(25) } returns detail
+        coEvery { repository.getPokemonDetail(25) } throws RuntimeException("fail")
+
+        vm.loadPokemon(25)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value
+        assertTrue(state is PokemonDetailUiState.Success)
+        assertEquals(detail, (state as PokemonDetailUiState.Success).pokemon)
     }
 
     @Test
@@ -140,4 +154,3 @@ class PokemonDetailViewModelTest {
         io.mockk.coVerify(exactly = 1) { repository.getPokemonDetail(25) }
     }
 }
-

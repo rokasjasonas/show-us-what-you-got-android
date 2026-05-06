@@ -32,6 +32,7 @@ class PokemonListViewModelTest {
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
+        coEvery { repository.getCachedPokemonList() } returns emptyList()
     }
 
     @After
@@ -67,6 +68,20 @@ class PokemonListViewModelTest {
         val state = vm.uiState.value
         assertEquals("Network error", state.initialErrorMessage)
         assertTrue(state.pokemon.isEmpty())
+    }
+
+    @Test
+    fun `init shows cached data when network fails`() = runTest {
+        val cached = listOf(Pokemon(1, "Bulbasaur", "url"))
+        coEvery { repository.getCachedPokemonList() } returns cached
+        coEvery { repository.getPokemonPage(30, 0) } throws RuntimeException("Network error")
+
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        val state = vm.uiState.value
+        assertEquals(cached, state.pokemon)
+        assertTrue(state.initialErrorMessage.isEmpty())
     }
 
     @Test
@@ -159,4 +174,3 @@ class PokemonListViewModelTest {
         assertEquals(pokemon, vm.uiState.value.pokemon)
     }
 }
-

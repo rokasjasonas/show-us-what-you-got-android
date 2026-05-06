@@ -12,6 +12,8 @@ import com.rokas.showuswhatyougot.network.PokemonListResponse
 import com.rokas.showuswhatyougot.network.PokemonOtherSpritesResponse
 import com.rokas.showuswhatyougot.network.PokemonSpritesResponse
 import com.rokas.showuswhatyougot.network.PokemonTypeSlotResponse
+import com.rokas.showuswhatyougot.storage.db.PokemonDao
+import com.rokas.showuswhatyougot.storage.db.PokemonDetailDao
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
@@ -23,12 +25,16 @@ import org.junit.Test
 class PokemonRepositoryTest {
 
     private lateinit var apiService: PokeApiService
+    private lateinit var pokemonDao: PokemonDao
+    private lateinit var pokemonDetailDao: PokemonDetailDao
     private lateinit var repository: PokemonRepository
 
     @Before
     fun setUp() {
         apiService = mockk()
-        repository = PokemonRepository(apiService)
+        pokemonDao = mockk(relaxUnitFun = true)
+        pokemonDetailDao = mockk(relaxUnitFun = true)
+        repository = PokemonRepository(apiService, pokemonDao, pokemonDetailDao)
     }
 
     @Test
