@@ -32,11 +32,22 @@ class PokemonListViewModel @Inject constructor(
     fun loadInitialPage() {
         viewModelScope.launch {
             _uiState.value = PokemonUiState(isInitialLoading = true, nextOffset = 0)
+
+            // Show cached data first
+            val cached = pokemonRepository.getCachedPokemonList()
+            if (cached.isNotEmpty()) {
+                _uiState.value = PokemonUiState(pokemon = cached, nextOffset = 0, isInitialLoading = true)
+            }
+
             _uiState.value = try {
                 val page = pokemonRepository.getPokemonPage(limit = PAGE_SIZE, offset = 0)
                 PokemonUiState(pokemon = page.pokemon, nextOffset = page.nextOffset)
             } catch (e: Exception) {
-                PokemonUiState(initialErrorMessage = e.message.orEmpty(), nextOffset = 0)
+                if (cached.isNotEmpty()) {
+                    PokemonUiState(pokemon = cached, nextOffset = 0)
+                } else {
+                    PokemonUiState(initialErrorMessage = e.message.orEmpty(), nextOffset = 0)
+                }
             }
         }
     }

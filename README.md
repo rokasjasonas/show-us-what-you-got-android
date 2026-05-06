@@ -13,13 +13,14 @@
   * [feature-list](feature-list) - Pokémon list screen
   * [feature-profile](feature-profile) - Profile & language settings screen
   * [network](network) - Retrofit API service, DTOs, Hilt network module
-  * [storage](storage) - DataStore preferences manager
+  * [storage](storage) - DataStore preferences manager, Room database caching
 * Architecture
   * MVVM with Hilt DI
   * Multi-module
   * Version catalog (libs.versions.toml)
 * Features
   * Pagination with auto-load on scroll
+  * Offline-first caching with Room (shows cached data instantly, then updates from network)
   * No network banner with auto-retry on reconnect
   * Language switching (EN/LT) persisted to DataStore
   * Dark mode toggle persisted to DataStore (falls back to system theme)
@@ -35,6 +36,5 @@
 
 TODO
 * Showkase
-* Caching
 * Design
 * CICD

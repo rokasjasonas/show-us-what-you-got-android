@@ -44,12 +44,21 @@ class PokemonDetailViewModel @Inject constructor(
     private fun performLoad(pokemonId: Int) {
         _uiState.value = PokemonDetailUiState.Loading
         viewModelScope.launch {
+            // Show cached data first
+            val cached = pokemonRepository.getCachedPokemonDetail(pokemonId)
+            if (cached != null) {
+                _uiState.value = PokemonDetailUiState.Success(cached)
+            }
+
             _uiState.value = try {
                 PokemonDetailUiState.Success(pokemonRepository.getPokemonDetail(pokemonId))
             } catch (e: Exception) {
-                PokemonDetailUiState.Error(e.message.orEmpty())
+                if (cached != null) {
+                    PokemonDetailUiState.Success(cached)
+                } else {
+                    PokemonDetailUiState.Error(e.message.orEmpty())
+                }
             }
         }
     }
 }
-

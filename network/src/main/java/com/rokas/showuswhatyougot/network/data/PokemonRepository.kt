@@ -3,6 +3,12 @@ package com.rokas.showuswhatyougot.network.data
 import com.rokas.showuswhatyougot.model.Pokemon
 import com.rokas.showuswhatyougot.model.PokemonDetail
 import com.rokas.showuswhatyougot.network.PokeApiService
+import com.rokas.showuswhatyougot.storage.db.PokemonDao
+import com.rokas.showuswhatyougot.storage.db.PokemonDetailDao
+import com.rokas.showuswhatyougot.storage.db.PokemonDetailEntity
+import com.rokas.showuswhatyougot.storage.db.PokemonEntity
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -10,38 +16,61 @@ import javax.inject.Singleton
 @Singleton
 class PokemonRepository @Inject constructor(
     private val pokeApiService: PokeApiService,
+    private val pokemonDao: PokemonDao,
+    private val pokemonDetailDao: PokemonDetailDao,
 ) {
     companion object {
         private const val OFFICIAL_ARTWORK_URL =
             "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/%d.png"
     }
 
-    suspend fun getPokemonPage(
+    fun getPokemonPageFlow(
         limit: Int,
         offset: Int,
-    ): PokemonPage {
-        val response = pokeApiService.getPokemonList(
-            limit = limit,
-            offset = offset,
-        )
+    ): Flow<PokemonPage> = flow {
+        // Emit cached data first
+        val cached = pokemonDao.getAll()
+        if (cached.isNotEmpty()) {
+            emit(
+                PokemonPage(
+                    pokemon = cached.map { it.toPokemon() },
+                    nextOffset = offset, // signal that more can be loaded
+                )
+            )
+        }
 
-        return PokemonPage(
-            pokemon = response.results.mapNotNull { entry ->
+        // Fetch from network
+        val response = pokeApiService.getPokemonList(limit = limit, offset = offset)
+        val networkPokemon = response.results.mapNotNull { entry ->
             val pokemonId = entry.url.trimEnd('/').substringAfterLast('/').toIntOrNull() ?: return@mapNotNull null
             Pokemon(
                 id = pokemonId,
                 name = entry.name.toDisplayName(),
                 imageUrl = OFFICIAL_ARTWORK_URL.format(pokemonId),
             )
-            }.sortedBy(Pokemon::id),
-            nextOffset = response.next?.substringAfter("offset=")?.substringBefore('&')?.toIntOrNull(),
+        }.sortedBy(Pokemon::id)
+
+        // Cache the results
+        pokemonDao.insertAll(networkPokemon.map { it.toEntity() })
+
+        emit(
+            PokemonPage(
+                pokemon = networkPokemon,
+                nextOffset = response.next?.substringAfter("offset=")?.substringBefore('&')?.toIntOrNull(),
+            )
         )
     }
 
-    suspend fun getPokemonDetail(id: Int): PokemonDetail {
-        val response = pokeApiService.getPokemonDetail(id)
+    fun getPokemonDetailFlow(id: Int): Flow<PokemonDetail> = flow {
+        // Emit cached data first
+        val cached = pokemonDetailDao.getById(id)
+        if (cached != null) {
+            emit(cached.toPokemonDetail())
+        }
 
-        return PokemonDetail(
+        // Fetch from network
+        val response = pokeApiService.getPokemonDetail(id)
+        val detail = PokemonDetail(
             id = response.id,
             name = response.name.toDisplayName(),
             imageUrl = response.sprites.other?.officialArtwork?.frontDefault
@@ -56,6 +85,70 @@ class PokemonRepository @Inject constructor(
             heightMeters = response.height / 10.0,
             weightKilograms = response.weight / 10.0,
         )
+
+        // Cache the result
+        pokemonDetailDao.insert(detail.toEntity())
+
+        emit(detail)
+    }
+
+    // Keep original suspend functions for backward compat
+    suspend fun getPokemonPage(
+        limit: Int,
+        offset: Int,
+    ): PokemonPage {
+        val response = pokeApiService.getPokemonList(
+            limit = limit,
+            offset = offset,
+        )
+
+        val networkPokemon = response.results.mapNotNull { entry ->
+            val pokemonId = entry.url.trimEnd('/').substringAfterLast('/').toIntOrNull() ?: return@mapNotNull null
+            Pokemon(
+                id = pokemonId,
+                name = entry.name.toDisplayName(),
+                imageUrl = OFFICIAL_ARTWORK_URL.format(pokemonId),
+            )
+        }.sortedBy(Pokemon::id)
+
+        pokemonDao.insertAll(networkPokemon.map { it.toEntity() })
+
+        return PokemonPage(
+            pokemon = networkPokemon,
+            nextOffset = response.next?.substringAfter("offset=")?.substringBefore('&')?.toIntOrNull(),
+        )
+    }
+
+    suspend fun getPokemonDetail(id: Int): PokemonDetail {
+        val response = pokeApiService.getPokemonDetail(id)
+
+        val detail = PokemonDetail(
+            id = response.id,
+            name = response.name.toDisplayName(),
+            imageUrl = response.sprites.other?.officialArtwork?.frontDefault
+                ?: response.sprites.frontDefault
+                ?: OFFICIAL_ARTWORK_URL.format(response.id),
+            types = response.types
+                .sortedBy { it.slot }
+                .map { it.type.name.toDisplayName() },
+            abilities = response.abilities
+                .map { it.ability.name.toDisplayName() }
+                .sorted(),
+            heightMeters = response.height / 10.0,
+            weightKilograms = response.weight / 10.0,
+        )
+
+        pokemonDetailDao.insert(detail.toEntity())
+
+        return detail
+    }
+
+    suspend fun getCachedPokemonList(): List<Pokemon> {
+        return pokemonDao.getAll().map { it.toPokemon() }
+    }
+
+    suspend fun getCachedPokemonDetail(id: Int): PokemonDetail? {
+        return pokemonDetailDao.getById(id)?.toPokemonDetail()
     }
 
     private fun String.toDisplayName(): String =
@@ -68,6 +161,30 @@ class PokemonRepository @Inject constructor(
                 }
             }
         }
+
+    private fun PokemonEntity.toPokemon() = Pokemon(id = id, name = name, imageUrl = imageUrl)
+
+    private fun Pokemon.toEntity() = PokemonEntity(id = id, name = name, imageUrl = imageUrl)
+
+    private fun PokemonDetailEntity.toPokemonDetail() = PokemonDetail(
+        id = id,
+        name = name,
+        imageUrl = imageUrl,
+        types = types.split(",").filter { it.isNotEmpty() },
+        abilities = abilities.split(",").filter { it.isNotEmpty() },
+        heightMeters = heightMeters,
+        weightKilograms = weightKilograms,
+    )
+
+    private fun PokemonDetail.toEntity() = PokemonDetailEntity(
+        id = id,
+        name = name,
+        imageUrl = imageUrl,
+        types = types.joinToString(","),
+        abilities = abilities.joinToString(","),
+        heightMeters = heightMeters,
+        weightKilograms = weightKilograms,
+    )
 }
 
 data class PokemonPage(
