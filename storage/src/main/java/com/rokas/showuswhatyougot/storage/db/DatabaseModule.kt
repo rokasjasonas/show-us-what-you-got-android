@@ -20,7 +20,7 @@ object DatabaseModule {
             context,
             PokemonDatabase::class.java,
             "pokemon_db"
-        ).build()
+        ).fallbackToDestructiveMigration(dropAllTables = true).build()
     }
 
     @Provides
@@ -28,5 +28,8 @@ object DatabaseModule {
 
     @Provides
     fun providePokemonDetailDao(database: PokemonDatabase): PokemonDetailDao = database.pokemonDetailDao()
+
+    @Provides
+    fun provideFavoritePokemonDao(database: PokemonDatabase): FavoritePokemonDao = database.favoritePokemonDao()
 }
 

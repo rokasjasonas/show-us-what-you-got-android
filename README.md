@@ -20,6 +20,7 @@
   * Version catalog (libs.versions.toml)
 * Features
   * Pagination with auto-load on scroll
+  * Favorites — heart icon on list items and detail screen, persisted in Room, dedicated Favorites tab
   * Offline-first caching with Room (shows cached data instantly, then updates from network)
   * No network banner with auto-retry on reconnect
   * Language switching (EN/LT) persisted to DataStore

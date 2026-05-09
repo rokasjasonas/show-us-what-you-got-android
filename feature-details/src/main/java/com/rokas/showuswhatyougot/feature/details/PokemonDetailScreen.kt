@@ -3,14 +3,20 @@ package com.rokas.showuswhatyougot.feature.details
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -29,7 +35,7 @@ import com.rokas.showuswhatyougot.ui.theme.ShowUsWhatYouGotTheme
 
 sealed interface PokemonDetailUiState {
     data object Loading : PokemonDetailUiState
-    data class Success(val pokemon: PokemonDetail) : PokemonDetailUiState
+    data class Success(val pokemon: PokemonDetail, val isFavorite: Boolean = false) : PokemonDetailUiState
     data class Error(val message: String) : PokemonDetailUiState
 }
 
@@ -38,6 +44,7 @@ fun PokemonDetailScreen(
     uiState: PokemonDetailUiState,
     onBack: () -> Unit,
     onRetry: () -> Unit,
+    onFavoriteToggle: () -> Unit,
     modifier: Modifier = Modifier,
     imageModifier: Modifier = Modifier,
 ) {
@@ -54,7 +61,9 @@ fun PokemonDetailScreen(
         )
         is PokemonDetailUiState.Success -> PokemonDetailContent(
             pokemon = uiState.pokemon,
+            isFavorite = uiState.isFavorite,
             onBack = onBack,
+            onFavoriteToggle = onFavoriteToggle,
             imageModifier = imageModifier,
             modifier = modifier,
         )
@@ -118,7 +127,9 @@ private fun PokemonDetailErrorState(
 @Composable
 private fun PokemonDetailContent(
     pokemon: PokemonDetail,
+    isFavorite: Boolean,
     onBack: () -> Unit,
+    onFavoriteToggle: () -> Unit,
     imageModifier: Modifier = Modifier,
     modifier: Modifier = Modifier,
 ) {
@@ -133,7 +144,20 @@ private fun PokemonDetailContent(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                DetailBackButton(onBack = onBack)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    DetailBackButton(onBack = onBack)
+                    IconButton(onClick = onFavoriteToggle) {
+                        Icon(
+                            imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                            contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                            tint = if (isFavorite) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
                 AsyncImage(
                     model = pokemon.imageUrl,
                     contentDescription = pokemon.name,
@@ -244,6 +268,7 @@ private fun PokemonDetailScreenPreview() {
             ),
             onBack = {},
             onRetry = {},
+            onFavoriteToggle = {},
         )
     }
 }

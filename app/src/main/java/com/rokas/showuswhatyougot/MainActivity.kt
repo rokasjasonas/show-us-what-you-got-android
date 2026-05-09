@@ -54,6 +54,8 @@ import com.rokas.showuswhatyougot.feature.details.PokemonDetailViewModel
 import com.rokas.showuswhatyougot.feature.list.PokemonListScreen
 import com.rokas.showuswhatyougot.feature.list.PokemonListViewModel
 import com.rokas.showuswhatyougot.feature.list.PokemonUiState
+import com.rokas.showuswhatyougot.favorites.FavoritesScreen
+import com.rokas.showuswhatyougot.favorites.FavoritesViewModel
 import com.rokas.showuswhatyougot.model.Pokemon
 import com.rokas.showuswhatyougot.storage.PreferencesManager
 import com.rokas.showuswhatyougot.ui.NoNetworkBanner
@@ -109,6 +111,7 @@ fun ShowUsWhatYouGotApp(
 ) {
     val listViewModel: PokemonListViewModel = androidx.hilt.navigation.compose.hiltViewModel()
     val detailViewModel: PokemonDetailViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+    val favoritesViewModel: FavoritesViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
     val currentLanguageTag by preferencesManager.selectedLanguage.collectAsState(initial = null)
@@ -120,6 +123,7 @@ fun ShowUsWhatYouGotApp(
 
     val pokemonUiState by listViewModel.uiState.collectAsState()
     val pokemonDetailUiState by detailViewModel.uiState.collectAsState()
+    val favoritePokemon by favoritesViewModel.favorites.collectAsState()
 
     val isNetworkAvailable = rememberNetworkAvailability()
 
@@ -150,6 +154,9 @@ fun ShowUsWhatYouGotApp(
         isNetworkAvailable = isNetworkAvailable,
         pokemonUiState = pokemonUiState,
         onLoadMorePokemon = { listViewModel.loadNextPage() },
+        onFavoriteToggle = { id ->
+            listViewModel.toggleFavorite(id)
+        },
         selectedPokemonId = selectedPokemonId,
         pokemonDetailUiState = pokemonDetailUiState,
         onPokemonSelected = {
@@ -159,6 +166,9 @@ fun ShowUsWhatYouGotApp(
         onBackFromPokemonDetail = { selectedPokemonId = null },
         onRetryPokemonDetailLoad = { detailViewModel.retry() },
         onRetryPokemonLoad = { listViewModel.retry() },
+        onDetailFavoriteToggle = { detailViewModel.toggleFavorite() },
+        favoritePokemon = favoritePokemon,
+        onFavoritePokemonToggle = { favoritesViewModel.toggleFavorite(it) },
         onLanguageSelected = { tag ->
             scope.launch { preferencesManager.setSelectedLanguage(tag) }
         },
@@ -179,12 +189,16 @@ private fun ShowUsWhatYouGotAppContent(
     isNetworkAvailable: Boolean,
     pokemonUiState: PokemonUiState,
     onLoadMorePokemon: () -> Unit,
+    onFavoriteToggle: (Int) -> Unit,
     selectedPokemonId: Int?,
     pokemonDetailUiState: PokemonDetailUiState,
     onPokemonSelected: (Int) -> Unit,
     onBackFromPokemonDetail: () -> Unit,
     onRetryPokemonDetailLoad: () -> Unit,
     onRetryPokemonLoad: () -> Unit,
+    onDetailFavoriteToggle: () -> Unit,
+    favoritePokemon: List<Pokemon>,
+    onFavoritePokemonToggle: (Int) -> Unit,
     onLanguageSelected: (String) -> Unit,
     currentLanguageTag: String?,
     isDarkMode: Boolean,
@@ -237,6 +251,7 @@ private fun ShowUsWhatYouGotAppContent(
                                     onRetry = onRetryPokemonLoad,
                                     onLoadMore = onLoadMorePokemon,
                                     onPokemonClick = onPokemonSelected,
+                                    onFavoriteToggle = onFavoriteToggle,
                                     modifier = Modifier.padding(innerPadding),
                                     imageModifier = { id ->
                                         Modifier.sharedElement(
@@ -250,6 +265,7 @@ private fun ShowUsWhatYouGotAppContent(
                                     uiState = pokemonDetailUiState,
                                     onBack = onBackFromPokemonDetail,
                                     onRetry = onRetryPokemonDetailLoad,
+                                    onFavoriteToggle = onDetailFavoriteToggle,
                                     modifier = Modifier.padding(innerPadding),
                                     imageModifier = Modifier.sharedElement(
                                         rememberSharedContentState(key = "pokemon_image_$pokemonId"),
@@ -261,9 +277,10 @@ private fun ShowUsWhatYouGotAppContent(
                     }
                 }
 
-                AppDestinations.FAVORITES -> PlaceholderScreen(
-                    titleRes = R.string.nav_favorites,
-                    messageRes = R.string.favorites_placeholder_message,
+                AppDestinations.FAVORITES -> FavoritesScreen(
+                    favorites = favoritePokemon,
+                    onPokemonClick = onPokemonSelected,
+                    onFavoriteToggle = onFavoritePokemonToggle,
                     modifier = Modifier.padding(innerPadding),
                 )
 
@@ -389,12 +406,16 @@ private fun ShowUsWhatYouGotAppPreview() {
                 nextOffset = 30,
             ),
             onLoadMorePokemon = {},
+            onFavoriteToggle = {},
             selectedPokemonId = null,
             pokemonDetailUiState = PokemonDetailUiState.Loading,
             onPokemonSelected = {},
             onBackFromPokemonDetail = {},
             onRetryPokemonDetailLoad = {},
             onRetryPokemonLoad = {},
+            onDetailFavoriteToggle = {},
+            favoritePokemon = emptyList(),
+            onFavoritePokemonToggle = {},
             onLanguageSelected = {},
             currentLanguageTag = null,
             isDarkMode = false,

@@ -5,10 +5,12 @@ import com.rokas.showuswhatyougot.analytics.AnalyticsEvent
 import com.rokas.showuswhatyougot.model.PokemonDetail
 import com.rokas.showuswhatyougot.network.data.PokemonRepository
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -33,6 +35,7 @@ class PokemonDetailViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         coEvery { repository.getCachedPokemonDetail(any()) } returns null
+        every { repository.isFavorite(any()) } returns flowOf(false)
         vm = PokemonDetailViewModel(repository, analyticsEngine)
     }
 

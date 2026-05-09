@@ -12,6 +12,7 @@ import com.rokas.showuswhatyougot.network.PokemonListResponse
 import com.rokas.showuswhatyougot.network.PokemonOtherSpritesResponse
 import com.rokas.showuswhatyougot.network.PokemonSpritesResponse
 import com.rokas.showuswhatyougot.network.PokemonTypeSlotResponse
+import com.rokas.showuswhatyougot.storage.db.FavoritePokemonDao
 import com.rokas.showuswhatyougot.storage.db.PokemonDao
 import com.rokas.showuswhatyougot.storage.db.PokemonDetailDao
 import io.mockk.coEvery
@@ -27,6 +28,7 @@ class PokemonRepositoryTest {
     private lateinit var apiService: PokeApiService
     private lateinit var pokemonDao: PokemonDao
     private lateinit var pokemonDetailDao: PokemonDetailDao
+    private lateinit var favoritePokemonDao: FavoritePokemonDao
     private lateinit var repository: PokemonRepository
 
     @Before
@@ -34,7 +36,8 @@ class PokemonRepositoryTest {
         apiService = mockk()
         pokemonDao = mockk(relaxUnitFun = true)
         pokemonDetailDao = mockk(relaxUnitFun = true)
-        repository = PokemonRepository(apiService, pokemonDao, pokemonDetailDao)
+        favoritePokemonDao = mockk(relaxUnitFun = true)
+        repository = PokemonRepository(apiService, pokemonDao, pokemonDetailDao, favoritePokemonDao)
     }
 
     @Test

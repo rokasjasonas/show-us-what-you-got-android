@@ -27,6 +27,21 @@ class PokemonListViewModel @Inject constructor(
 
     init {
         loadInitialPage()
+        observeFavorites()
+    }
+
+    private fun observeFavorites() {
+        viewModelScope.launch {
+            pokemonRepository.getFavoriteIds().collect { ids ->
+                _uiState.value = _uiState.value.copy(favoriteIds = ids)
+            }
+        }
+    }
+
+    fun toggleFavorite(pokemonId: Int) {
+        viewModelScope.launch {
+            pokemonRepository.toggleFavorite(pokemonId)
+        }
     }
 
     fun loadInitialPage() {

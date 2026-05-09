@@ -18,6 +18,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,6 +31,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -39,6 +43,7 @@ import com.rokas.showuswhatyougot.ui.theme.ShowUsWhatYouGotTheme
 
 data class PokemonUiState(
     val pokemon: List<Pokemon> = emptyList(),
+    val favoriteIds: Set<Int> = emptySet(),
     val isInitialLoading: Boolean = false,
     val isAppending: Boolean = false,
     val initialErrorMessage: String = "",
@@ -52,6 +57,7 @@ fun PokemonListScreen(
     onRetry: () -> Unit,
     onLoadMore: () -> Unit,
     onPokemonClick: (Int) -> Unit,
+    onFavoriteToggle: (Int) -> Unit,
     modifier: Modifier = Modifier,
     imageModifier: @Composable (pokemonId: Int) -> Modifier = { Modifier },
 ) {
@@ -66,12 +72,14 @@ fun PokemonListScreen(
 
         else -> PokemonContent(
             pokemon = uiState.pokemon,
+            favoriteIds = uiState.favoriteIds,
             isAppending = uiState.isAppending,
             appendErrorMessage = uiState.appendErrorMessage,
             canLoadMore = uiState.nextOffset != null,
             onLoadMore = onLoadMore,
             onRetryAppend = onLoadMore,
             onPokemonClick = onPokemonClick,
+            onFavoriteToggle = onFavoriteToggle,
             imageModifier = imageModifier,
             modifier = modifier,
         )
@@ -122,12 +130,14 @@ private fun PokemonErrorState(
 @Composable
 private fun PokemonContent(
     pokemon: List<Pokemon>,
+    favoriteIds: Set<Int>,
     isAppending: Boolean,
     appendErrorMessage: String,
     canLoadMore: Boolean,
     onLoadMore: () -> Unit,
     onRetryAppend: () -> Unit,
     onPokemonClick: (Int) -> Unit,
+    onFavoriteToggle: (Int) -> Unit,
     imageModifier: @Composable (pokemonId: Int) -> Modifier,
     modifier: Modifier = Modifier,
 ) {
@@ -179,7 +189,9 @@ private fun PokemonContent(
         ) { item ->
             PokemonRow(
                 pokemon = item,
+                isFavorite = item.id in favoriteIds,
                 onClick = { onPokemonClick(item.id) },
+                onFavoriteToggle = { onFavoriteToggle(item.id) },
                 imageModifier = imageModifier(item.id),
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
@@ -241,7 +253,9 @@ private fun PokemonAppendError(
 @Composable
 private fun PokemonRow(
     pokemon: Pokemon,
+    isFavorite: Boolean,
     onClick: () -> Unit,
+    onFavoriteToggle: () -> Unit,
     imageModifier: Modifier = Modifier,
     modifier: Modifier = Modifier,
 ) {
@@ -271,6 +285,7 @@ private fun PokemonRow(
             )
 
             Column(
+                modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
@@ -281,6 +296,14 @@ private fun PokemonRow(
                 Text(
                     text = "#${pokemon.id.toString().padStart(3, '0')}",
                     style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+
+            IconButton(onClick = onFavoriteToggle) {
+                Icon(
+                    imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                    contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                    tint = if (isFavorite) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -327,6 +350,7 @@ private fun PokemonListScreenPreview() {
             onRetry = {},
             onLoadMore = {},
             onPokemonClick = {},
+            onFavoriteToggle = {},
         )
     }
 }

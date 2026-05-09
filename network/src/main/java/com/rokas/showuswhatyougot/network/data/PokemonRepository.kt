@@ -3,12 +3,16 @@ package com.rokas.showuswhatyougot.network.data
 import com.rokas.showuswhatyougot.model.Pokemon
 import com.rokas.showuswhatyougot.model.PokemonDetail
 import com.rokas.showuswhatyougot.network.PokeApiService
+import com.rokas.showuswhatyougot.storage.db.FavoritePokemonDao
+import com.rokas.showuswhatyougot.storage.db.FavoritePokemonEntity
 import com.rokas.showuswhatyougot.storage.db.PokemonDao
 import com.rokas.showuswhatyougot.storage.db.PokemonDetailDao
 import com.rokas.showuswhatyougot.storage.db.PokemonDetailEntity
 import com.rokas.showuswhatyougot.storage.db.PokemonEntity
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -18,6 +22,7 @@ class PokemonRepository @Inject constructor(
     private val pokeApiService: PokeApiService,
     private val pokemonDao: PokemonDao,
     private val pokemonDetailDao: PokemonDetailDao,
+    private val favoritePokemonDao: FavoritePokemonDao,
 ) {
     companion object {
         private const val OFFICIAL_ARTWORK_URL =
@@ -149,6 +154,33 @@ class PokemonRepository @Inject constructor(
 
     suspend fun getCachedPokemonDetail(id: Int): PokemonDetail? {
         return pokemonDetailDao.getById(id)?.toPokemonDetail()
+    }
+
+    fun getFavoritePokemon(): Flow<List<Pokemon>> {
+        return favoritePokemonDao.getAll().map { favorites ->
+            val ids = favorites.map { it.pokemonId }.toSet()
+            if (ids.isEmpty()) emptyList()
+            else pokemonDao.getAll()
+                .filter { it.id in ids }
+                .map { it.toPokemon() }
+        }
+    }
+
+    fun isFavorite(pokemonId: Int): Flow<Boolean> = favoritePokemonDao.isFavorite(pokemonId)
+
+    fun getFavoriteIds(): Flow<Set<Int>> = favoritePokemonDao.getAll().map { list ->
+        list.map { it.pokemonId }.toSet()
+    }
+
+    suspend fun toggleFavorite(pokemonId: Int) {
+        val entity = FavoritePokemonEntity(pokemonId)
+        // Use a simple check-and-toggle
+        val isFav = favoritePokemonDao.isFavorite(pokemonId).first()
+        if (isFav) {
+            favoritePokemonDao.delete(pokemonId)
+        } else {
+            favoritePokemonDao.insert(entity)
+        }
     }
 
     private fun String.toDisplayName(): String =

@@ -12,6 +12,7 @@ import com.rokas.showuswhatyougot.network.PokemonListResponse
 import com.rokas.showuswhatyougot.network.PokemonOtherSpritesResponse
 import com.rokas.showuswhatyougot.network.PokemonSpritesResponse
 import com.rokas.showuswhatyougot.network.PokemonTypeSlotResponse
+import com.rokas.showuswhatyougot.storage.db.FavoritePokemonDao
 import com.rokas.showuswhatyougot.storage.db.PokemonDao
 import com.rokas.showuswhatyougot.storage.db.PokemonDetailDao
 import com.rokas.showuswhatyougot.storage.db.PokemonDetailEntity
@@ -29,8 +30,9 @@ class PokemonRepositoryTest {
     private val api = mockk<PokeApiService>()
     private val pokemonDao = mockk<PokemonDao>(relaxUnitFun = true)
     private val pokemonDetailDao = mockk<PokemonDetailDao>(relaxUnitFun = true)
+    private val favoritePokemonDao = mockk<FavoritePokemonDao>(relaxUnitFun = true)
 
-    private val repository = PokemonRepository(api, pokemonDao, pokemonDetailDao)
+    private val repository = PokemonRepository(api, pokemonDao, pokemonDetailDao, favoritePokemonDao)
 
     @Test
     fun `getPokemonPage caches results in dao`() = runTest {

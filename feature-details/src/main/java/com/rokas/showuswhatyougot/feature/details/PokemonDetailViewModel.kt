@@ -28,6 +28,26 @@ class PokemonDetailViewModel @Inject constructor(
         currentPokemonId = pokemonId
         analyticsEngine.trackEvent(AnalyticsEvent.DetailsScreenOpen(pokemonId))
         performLoad(pokemonId)
+        observeFavorite(pokemonId)
+    }
+
+    fun toggleFavorite() {
+        currentPokemonId?.let { id ->
+            viewModelScope.launch {
+                pokemonRepository.toggleFavorite(id)
+            }
+        }
+    }
+
+    private fun observeFavorite(pokemonId: Int) {
+        viewModelScope.launch {
+            pokemonRepository.isFavorite(pokemonId).collect { isFav ->
+                val current = _uiState.value
+                if (current is PokemonDetailUiState.Success) {
+                    _uiState.value = current.copy(isFavorite = isFav)
+                }
+            }
+        }
     }
 
     fun retry() {

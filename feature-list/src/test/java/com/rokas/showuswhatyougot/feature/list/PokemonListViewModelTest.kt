@@ -6,10 +6,12 @@ import com.rokas.showuswhatyougot.model.Pokemon
 import com.rokas.showuswhatyougot.network.data.PokemonPage
 import com.rokas.showuswhatyougot.network.data.PokemonRepository
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -33,6 +35,7 @@ class PokemonListViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         coEvery { repository.getCachedPokemonList() } returns emptyList()
+        every { repository.getFavoriteIds() } returns flowOf(emptySet())
     }
 
     @After
