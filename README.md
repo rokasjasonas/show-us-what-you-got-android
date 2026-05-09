@@ -33,8 +33,16 @@
   * Supports multiple providers simultaneously
   * Stub provider (Logcat) + Debug provider (in-app log)
 * Unit tests
+* Deploy
+  * `./scripts/deploy.sh` — builds signed release AAB and uploads to Play Store internal testing
+  * Uses Google Play Publishing API via Python (no Fastlane)
+  * Setup:
+    1. Create a Google Cloud service account with Play Store access
+    2. Download the JSON key → save as `play-store-key.json` in project root
+    3. Fill in `keystore.properties` with your signing credentials
+    4. `pip install google-api-python-client oauth2client`
+    5. `./scripts/deploy.sh`
 
 TODO
 * Showkase
 * Design
-* CICD
