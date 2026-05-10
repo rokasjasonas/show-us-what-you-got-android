@@ -1,4 +1,4 @@
-package com.rokas.showuswhatyougot.favorites
+package com.rokas.showuswhatyougot.feature.favorites
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement

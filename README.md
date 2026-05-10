@@ -10,6 +10,7 @@
   * [common](common) - Shared UI components, theme, models
   * [debug-menu](debug-menu) - Debug drawer with app info and analytics monitor
   * [feature-details](feature-details) - Pokémon detail screen
+  * [feature-favorites](feature-favorites) - Favorites screen and ViewModel
   * [feature-list](feature-list) - Pokémon list screen
   * [feature-profile](feature-profile) - Profile & language settings screen
   * [network](network) - Retrofit API service, DTOs, Hilt network module

@@ -1,4 +1,4 @@
-package com.rokas.showuswhatyougot.favorites
+package com.rokas.showuswhatyougot.feature.favorites
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

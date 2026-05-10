@@ -54,8 +54,8 @@ import com.rokas.showuswhatyougot.feature.details.PokemonDetailViewModel
 import com.rokas.showuswhatyougot.feature.list.PokemonListScreen
 import com.rokas.showuswhatyougot.feature.list.PokemonListViewModel
 import com.rokas.showuswhatyougot.feature.list.PokemonUiState
-import com.rokas.showuswhatyougot.favorites.FavoritesScreen
-import com.rokas.showuswhatyougot.favorites.FavoritesViewModel
+import com.rokas.showuswhatyougot.feature.favorites.FavoritesScreen
+import com.rokas.showuswhatyougot.feature.favorites.FavoritesViewModel
 import com.rokas.showuswhatyougot.model.Pokemon
 import com.rokas.showuswhatyougot.storage.PreferencesManager
 import com.rokas.showuswhatyougot.ui.NoNetworkBanner
@@ -162,6 +162,7 @@ fun ShowUsWhatYouGotApp(
         onPokemonSelected = {
             listViewModel.onPokemonClick(it)
             selectedPokemonId = it
+            currentDestination = AppDestinations.HOME
         },
         onBackFromPokemonDetail = { selectedPokemonId = null },
         onRetryPokemonDetailLoad = { detailViewModel.retry() },
