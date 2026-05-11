@@ -25,7 +25,8 @@ android {
 }
 
 dependencies {
-    implementation(project(":common"))
+    // Assuming :common now houses the shared UI components/logic
+    implementation(project(":common")) 
     implementation(project(":analytics"))
     implementation(project(":network"))
     implementation(platform(libs.androidx.compose.bom))

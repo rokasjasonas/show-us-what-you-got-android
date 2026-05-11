@@ -136,6 +136,7 @@ fun ShowUsWhatYouGotApp(
     val storedDarkMode by preferencesManager.darkModeEnabled.collectAsState(initial = null)
     val isDarkMode = storedDarkMode ?: systemDark
     var selectedPokemonId by rememberSaveable { mutableStateOf<Int?>(null) }
+    var selectedFavoritePokemonId by rememberSaveable { mutableStateOf<Int?>(null) }
     val scope = rememberCoroutineScope()
 
     val pokemonUiState by listViewModel.uiState.collectAsState()
@@ -151,8 +152,9 @@ fun ShowUsWhatYouGotApp(
         }
     }
 
-    LaunchedEffect(selectedPokemonId) {
-        selectedPokemonId?.let { detailViewModel.loadPokemon(it) }
+    LaunchedEffect(selectedPokemonId, selectedFavoritePokemonId) {
+        val id = selectedPokemonId ?: selectedFavoritePokemonId
+        id?.let { detailViewModel.loadPokemon(it) }
     }
 
     LaunchedEffect(currentDestination) {
@@ -163,6 +165,10 @@ fun ShowUsWhatYouGotApp(
 
     BackHandler(enabled = selectedPokemonId != null) {
         selectedPokemonId = null
+    }
+
+    BackHandler(enabled = selectedFavoritePokemonId != null) {
+        selectedFavoritePokemonId = null
     }
 
     ShowUsWhatYouGotAppContent(
@@ -187,6 +193,9 @@ fun ShowUsWhatYouGotApp(
         onDetailFavoriteToggle = { detailViewModel.toggleFavorite() },
         favoritePokemon = favoritePokemon,
         onFavoritePokemonToggle = { favoritesViewModel.toggleFavorite(it) },
+        selectedFavoritePokemonId = selectedFavoritePokemonId,
+        onFavoritePokemonSelected = { selectedFavoritePokemonId = it },
+        onBackFromFavoriteDetail = { selectedFavoritePokemonId = null },
         onLanguageSelected = { tag ->
             scope.launch { preferencesManager.setSelectedLanguage(tag) }
         },
@@ -217,6 +226,9 @@ private fun ShowUsWhatYouGotAppContent(
     onDetailFavoriteToggle: () -> Unit,
     favoritePokemon: List<Pokemon>,
     onFavoritePokemonToggle: (Int) -> Unit,
+    selectedFavoritePokemonId: Int?,
+    onFavoritePokemonSelected: (Int) -> Unit,
+    onBackFromFavoriteDetail: () -> Unit,
     onLanguageSelected: (String) -> Unit,
     currentLanguageTag: String?,
     isDarkMode: Boolean,
@@ -295,12 +307,42 @@ private fun ShowUsWhatYouGotAppContent(
                     }
                 }
 
-                AppDestinations.FAVORITES -> FavoritesScreen(
-                    favorites = favoritePokemon,
-                    onPokemonClick = onPokemonSelected,
-                    onFavoriteToggle = onFavoritePokemonToggle,
-                    modifier = Modifier.padding(innerPadding),
-                )
+                AppDestinations.FAVORITES -> {
+                    SharedTransitionLayout {
+                        AnimatedContent(
+                            targetState = selectedFavoritePokemonId,
+                            transitionSpec = {
+                                if (targetState != null) {
+                                    (slideInHorizontally { it } + fadeIn()) togetherWith (slideOutHorizontally { -it / 3 } + fadeOut())
+                                } else {
+                                    (slideInHorizontally { -it / 3 } + fadeIn()) togetherWith (slideOutHorizontally { it } + fadeOut())
+                                }
+                            },
+                            label = "FavoritesDetailTransition",
+                        ) { pokemonId ->
+                            if (pokemonId == null) {
+                                FavoritesScreen(
+                                    favorites = favoritePokemon,
+                                    onPokemonClick = onFavoritePokemonSelected,
+                                    onFavoriteToggle = onFavoritePokemonToggle,
+                                    modifier = Modifier.padding(innerPadding),
+                                )
+                            } else {
+                                PokemonDetailScreen(
+                                    uiState = pokemonDetailUiState,
+                                    onBack = onBackFromFavoriteDetail,
+                                    onRetry = onRetryPokemonDetailLoad,
+                                    onFavoriteToggle = onDetailFavoriteToggle,
+                                    modifier = Modifier.padding(innerPadding),
+                                    imageModifier = Modifier.sharedElement(
+                                        rememberSharedContentState(key = "pokemon_image_$pokemonId"),
+                                        animatedVisibilityScope = this@AnimatedContent,
+                                    ),
+                                )
+                            }
+                        }
+                    }
+                }
 
                 AppDestinations.PROFILE -> com.rokas.showuswhatyougot.feature.profile.ProfileScreen(
                     onLanguageSelected = onLanguageSelected,
@@ -434,6 +476,9 @@ private fun ShowUsWhatYouGotAppPreview() {
             onDetailFavoriteToggle = {},
             favoritePokemon = emptyList(),
             onFavoritePokemonToggle = {},
+            selectedFavoritePokemonId = null,
+            onFavoritePokemonSelected = {},
+            onBackFromFavoriteDetail = {},
             onLanguageSelected = {},
             currentLanguageTag = null,
             isDarkMode = false,

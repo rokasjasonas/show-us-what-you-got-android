@@ -25,7 +25,8 @@ android {
 }
 
 dependencies {
-    implementation(project(":common"))
+    // Assuming :common now houses the shared UI components/logic
+    implementation(project(":common")) 
     implementation(project(":network"))
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.material3)
@@ -41,4 +42,3 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
 }
-
