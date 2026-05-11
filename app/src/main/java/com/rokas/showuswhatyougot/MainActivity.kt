@@ -88,12 +88,18 @@ class MainActivity : ComponentActivity() {
                     statusBarStyle = if (isDark) {
                         androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
                     } else {
-                        androidx.activity.SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
+                        androidx.activity.SystemBarStyle.light(
+                            android.graphics.Color.TRANSPARENT,
+                            android.graphics.Color.TRANSPARENT
+                        )
                     },
                     navigationBarStyle = if (isDark) {
                         androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
                     } else {
-                        androidx.activity.SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
+                        androidx.activity.SystemBarStyle.light(
+                            android.graphics.Color.TRANSPARENT,
+                            android.graphics.Color.TRANSPARENT
+                        )
                     },
                 )
             }
@@ -136,7 +142,6 @@ fun ShowUsWhatYouGotApp(
     val storedDarkMode by preferencesManager.darkModeEnabled.collectAsState(initial = null)
     val isDarkMode = storedDarkMode ?: systemDark
     var selectedPokemonId by rememberSaveable { mutableStateOf<Int?>(null) }
-    var selectedFavoritePokemonId by rememberSaveable { mutableStateOf<Int?>(null) }
     val scope = rememberCoroutineScope()
 
     val pokemonUiState by listViewModel.uiState.collectAsState()
@@ -152,8 +157,8 @@ fun ShowUsWhatYouGotApp(
         }
     }
 
-    LaunchedEffect(selectedPokemonId, selectedFavoritePokemonId) {
-        val id = selectedPokemonId ?: selectedFavoritePokemonId
+    LaunchedEffect(selectedPokemonId) {
+        val id = selectedPokemonId
         id?.let { detailViewModel.loadPokemon(it) }
     }
 
@@ -167,13 +172,16 @@ fun ShowUsWhatYouGotApp(
         selectedPokemonId = null
     }
 
-    BackHandler(enabled = selectedFavoritePokemonId != null) {
-        selectedFavoritePokemonId = null
-    }
-
     ShowUsWhatYouGotAppContent(
         currentDestination = currentDestination,
-        onDestinationChanged = { currentDestination = it },
+        onDestinationChanged = {
+            when (it) {
+                AppDestinations.HOME,
+                AppDestinations.FAVORITES -> selectedPokemonId = null
+                else -> {}
+            }
+            currentDestination = it
+        },
         isNetworkAvailable = isNetworkAvailable,
         pokemonUiState = pokemonUiState,
         onLoadMorePokemon = { listViewModel.loadNextPage() },
@@ -193,9 +201,9 @@ fun ShowUsWhatYouGotApp(
         onDetailFavoriteToggle = { detailViewModel.toggleFavorite() },
         favoritePokemon = favoritePokemon,
         onFavoritePokemonToggle = { favoritesViewModel.toggleFavorite(it) },
-        selectedFavoritePokemonId = selectedFavoritePokemonId,
-        onFavoritePokemonSelected = { selectedFavoritePokemonId = it },
-        onBackFromFavoriteDetail = { selectedFavoritePokemonId = null },
+        selectedFavoritePokemonId = selectedPokemonId,
+        onFavoritePokemonSelected = { selectedPokemonId = it },
+        onBackFromFavoriteDetail = { selectedPokemonId = null },
         onLanguageSelected = { tag ->
             scope.launch { preferencesManager.setSelectedLanguage(tag) }
         },

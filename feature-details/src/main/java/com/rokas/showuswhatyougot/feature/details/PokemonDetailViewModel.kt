@@ -6,9 +6,11 @@ import com.rokas.showuswhatyougot.analytics.AnalyticsEngine
 import com.rokas.showuswhatyougot.analytics.AnalyticsEvent
 import com.rokas.showuswhatyougot.network.data.PokemonRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,6 +24,7 @@ class PokemonDetailViewModel @Inject constructor(
     val uiState: StateFlow<PokemonDetailUiState> = _uiState.asStateFlow()
 
     private var currentPokemonId: Int? = null
+    private var favoriteJob: Job? = null
 
     fun loadPokemon(pokemonId: Int) {
         if (currentPokemonId == pokemonId && _uiState.value !is PokemonDetailUiState.Error) return
@@ -40,7 +43,8 @@ class PokemonDetailViewModel @Inject constructor(
     }
 
     private fun observeFavorite(pokemonId: Int) {
-        viewModelScope.launch {
+        favoriteJob?.cancel()
+        favoriteJob = viewModelScope.launch {
             pokemonRepository.isFavorite(pokemonId).collect { isFav ->
                 val current = _uiState.value
                 if (current is PokemonDetailUiState.Success) {
@@ -64,17 +68,19 @@ class PokemonDetailViewModel @Inject constructor(
     private fun performLoad(pokemonId: Int) {
         _uiState.value = PokemonDetailUiState.Loading
         viewModelScope.launch {
+            val isFav = pokemonRepository.isFavorite(pokemonId).first()
+
             // Show cached data first
             val cached = pokemonRepository.getCachedPokemonDetail(pokemonId)
             if (cached != null) {
-                _uiState.value = PokemonDetailUiState.Success(cached)
+                _uiState.value = PokemonDetailUiState.Success(cached, isFavorite = isFav)
             }
 
             _uiState.value = try {
-                PokemonDetailUiState.Success(pokemonRepository.getPokemonDetail(pokemonId))
+                PokemonDetailUiState.Success(pokemonRepository.getPokemonDetail(pokemonId), isFavorite = isFav)
             } catch (e: Exception) {
                 if (cached != null) {
-                    PokemonDetailUiState.Success(cached)
+                    PokemonDetailUiState.Success(cached, isFavorite = isFav)
                 } else {
                     PokemonDetailUiState.Error(e.message.orEmpty())
                 }

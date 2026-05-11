@@ -46,22 +46,22 @@ class PokemonListViewModel @Inject constructor(
 
     fun loadInitialPage() {
         viewModelScope.launch {
-            _uiState.value = PokemonUiState(isInitialLoading = true, nextOffset = 0)
+            _uiState.value = _uiState.value.copy(isInitialLoading = true, nextOffset = 0, pokemon = emptyList(), initialErrorMessage = "", appendErrorMessage = "")
 
             // Show cached data first
             val cached = pokemonRepository.getCachedPokemonList()
             if (cached.isNotEmpty()) {
-                _uiState.value = PokemonUiState(pokemon = cached, nextOffset = 0, isInitialLoading = true)
+                _uiState.value = _uiState.value.copy(pokemon = cached)
             }
 
             _uiState.value = try {
                 val page = pokemonRepository.getPokemonPage(limit = PAGE_SIZE, offset = 0)
-                PokemonUiState(pokemon = page.pokemon, nextOffset = page.nextOffset)
+                _uiState.value.copy(pokemon = page.pokemon, nextOffset = page.nextOffset, isInitialLoading = false)
             } catch (e: Exception) {
                 if (cached.isNotEmpty()) {
-                    PokemonUiState(pokemon = cached, nextOffset = 0)
+                    _uiState.value.copy(pokemon = cached, nextOffset = 0, isInitialLoading = false)
                 } else {
-                    PokemonUiState(initialErrorMessage = e.message.orEmpty(), nextOffset = 0)
+                    _uiState.value.copy(initialErrorMessage = e.message.orEmpty(), nextOffset = 0, isInitialLoading = false)
                 }
             }
         }
@@ -77,14 +77,14 @@ class PokemonListViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = try {
                 val page = pokemonRepository.getPokemonPage(limit = PAGE_SIZE, offset = nextOffset)
-                current.copy(
+                _uiState.value.copy(
                     pokemon = current.pokemon + page.pokemon,
                     isAppending = false,
                     appendErrorMessage = "",
                     nextOffset = page.nextOffset,
                 )
             } catch (e: Exception) {
-                current.copy(isAppending = false, appendErrorMessage = e.message.orEmpty())
+                _uiState.value.copy(isAppending = false, appendErrorMessage = e.message.orEmpty())
             }
         }
     }
