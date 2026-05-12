@@ -4,7 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rokas.showuswhatyougot.analytics.AnalyticsEngine
 import com.rokas.showuswhatyougot.analytics.AnalyticsEvent
-import com.rokas.showuswhatyougot.network.data.PokemonRepository
+import com.rokas.showuswhatyougot.domain.GetCachedPokemonDetailUseCase
+import com.rokas.showuswhatyougot.domain.GetPokemonDetailUseCase
+import com.rokas.showuswhatyougot.domain.IsFavoriteUseCase
+import com.rokas.showuswhatyougot.domain.ToggleFavoriteUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,7 +19,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PokemonDetailViewModel @Inject constructor(
-    private val pokemonRepository: PokemonRepository,
+    private val getPokemonDetail: GetPokemonDetailUseCase,
+    private val getCachedPokemonDetail: GetCachedPokemonDetailUseCase,
+    private val isFavoriteUseCase: IsFavoriteUseCase,
+    private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
     private val analyticsEngine: AnalyticsEngine,
 ) : ViewModel() {
 
@@ -37,7 +43,7 @@ class PokemonDetailViewModel @Inject constructor(
     fun toggleFavorite() {
         currentPokemonId?.let { id ->
             viewModelScope.launch {
-                pokemonRepository.toggleFavorite(id)
+                toggleFavoriteUseCase(id)
             }
         }
     }
@@ -45,7 +51,7 @@ class PokemonDetailViewModel @Inject constructor(
     private fun observeFavorite(pokemonId: Int) {
         favoriteJob?.cancel()
         favoriteJob = viewModelScope.launch {
-            pokemonRepository.isFavorite(pokemonId).collect { isFav ->
+            isFavoriteUseCase(pokemonId).collect { isFav ->
                 val current = _uiState.value
                 if (current is PokemonDetailUiState.Success) {
                     _uiState.value = current.copy(isFavorite = isFav)
@@ -68,16 +74,16 @@ class PokemonDetailViewModel @Inject constructor(
     private fun performLoad(pokemonId: Int) {
         _uiState.value = PokemonDetailUiState.Loading
         viewModelScope.launch {
-            val isFav = pokemonRepository.isFavorite(pokemonId).first()
+            val isFav = isFavoriteUseCase(pokemonId).first()
 
             // Show cached data first
-            val cached = pokemonRepository.getCachedPokemonDetail(pokemonId)
+            val cached = getCachedPokemonDetail(pokemonId)
             if (cached != null) {
                 _uiState.value = PokemonDetailUiState.Success(cached, isFavorite = isFav)
             }
 
             _uiState.value = try {
-                PokemonDetailUiState.Success(pokemonRepository.getPokemonDetail(pokemonId), isFavorite = isFav)
+                PokemonDetailUiState.Success(getPokemonDetail(pokemonId), isFavorite = isFav)
             } catch (e: Exception) {
                 if (cached != null) {
                     PokemonDetailUiState.Success(cached, isFavorite = isFav)

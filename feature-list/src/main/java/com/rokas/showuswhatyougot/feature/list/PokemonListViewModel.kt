@@ -4,7 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rokas.showuswhatyougot.analytics.AnalyticsEngine
 import com.rokas.showuswhatyougot.analytics.AnalyticsEvent
-import com.rokas.showuswhatyougot.network.data.PokemonRepository
+import com.rokas.showuswhatyougot.domain.GetCachedPokemonListUseCase
+import com.rokas.showuswhatyougot.domain.GetPokemonPageUseCase
+import com.rokas.showuswhatyougot.domain.ObserveFavoriteIdsUseCase
+import com.rokas.showuswhatyougot.domain.ToggleFavoriteUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +19,10 @@ private const val PAGE_SIZE = 30
 
 @HiltViewModel
 class PokemonListViewModel @Inject constructor(
-    private val pokemonRepository: PokemonRepository,
+    private val getPokemonPage: GetPokemonPageUseCase,
+    private val getCachedPokemonList: GetCachedPokemonListUseCase,
+    private val observeFavoriteIds: ObserveFavoriteIdsUseCase,
+    private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
     private val analyticsEngine: AnalyticsEngine,
 ) : ViewModel() {
 
@@ -32,7 +38,7 @@ class PokemonListViewModel @Inject constructor(
 
     private fun observeFavorites() {
         viewModelScope.launch {
-            pokemonRepository.getFavoriteIds().collect { ids ->
+            observeFavoriteIds().collect { ids ->
                 _uiState.value = _uiState.value.copy(favoriteIds = ids)
             }
         }
@@ -40,7 +46,7 @@ class PokemonListViewModel @Inject constructor(
 
     fun toggleFavorite(pokemonId: Int) {
         viewModelScope.launch {
-            pokemonRepository.toggleFavorite(pokemonId)
+            toggleFavoriteUseCase(pokemonId)
         }
     }
 
@@ -49,13 +55,13 @@ class PokemonListViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isInitialLoading = true, nextOffset = 0, pokemon = emptyList(), initialErrorMessage = "", appendErrorMessage = "")
 
             // Show cached data first
-            val cached = pokemonRepository.getCachedPokemonList()
+            val cached = getCachedPokemonList()
             if (cached.isNotEmpty()) {
                 _uiState.value = _uiState.value.copy(pokemon = cached)
             }
 
             _uiState.value = try {
-                val page = pokemonRepository.getPokemonPage(limit = PAGE_SIZE, offset = 0)
+                val page = getPokemonPage(limit = PAGE_SIZE, offset = 0)
                 _uiState.value.copy(pokemon = page.pokemon, nextOffset = page.nextOffset, isInitialLoading = false)
             } catch (e: Exception) {
                 if (cached.isNotEmpty()) {
@@ -76,7 +82,7 @@ class PokemonListViewModel @Inject constructor(
 
         viewModelScope.launch {
             _uiState.value = try {
-                val page = pokemonRepository.getPokemonPage(limit = PAGE_SIZE, offset = nextOffset)
+                val page = getPokemonPage(limit = PAGE_SIZE, offset = nextOffset)
                 _uiState.value.copy(
                     pokemon = current.pokemon + page.pokemon,
                     isAppending = false,

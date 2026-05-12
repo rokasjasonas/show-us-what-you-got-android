@@ -2,8 +2,9 @@ package com.rokas.showuswhatyougot.feature.favorites
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rokas.showuswhatyougot.domain.GetFavoritePokemonUseCase
+import com.rokas.showuswhatyougot.domain.ToggleFavoriteUseCase
 import com.rokas.showuswhatyougot.model.Pokemon
-import com.rokas.showuswhatyougot.network.data.PokemonRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -13,16 +14,16 @@ import javax.inject.Inject
 
 @HiltViewModel
 class FavoritesViewModel @Inject constructor(
-    private val pokemonRepository: PokemonRepository,
+    getFavoritePokemon: GetFavoritePokemonUseCase,
+    private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
 ) : ViewModel() {
 
-    val favorites: StateFlow<List<Pokemon>> = pokemonRepository.getFavoritePokemon()
+    val favorites: StateFlow<List<Pokemon>> = getFavoritePokemon()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun toggleFavorite(pokemonId: Int) {
         viewModelScope.launch {
-            pokemonRepository.toggleFavorite(pokemonId)
+            toggleFavoriteUseCase(pokemonId)
         }
     }
 }
-

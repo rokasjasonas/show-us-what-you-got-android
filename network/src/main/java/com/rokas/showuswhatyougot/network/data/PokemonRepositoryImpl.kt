@@ -2,6 +2,7 @@ package com.rokas.showuswhatyougot.network.data
 
 import com.rokas.showuswhatyougot.model.Pokemon
 import com.rokas.showuswhatyougot.model.PokemonDetail
+import com.rokas.showuswhatyougot.model.PokemonPage
 import com.rokas.showuswhatyougot.network.PokeApiService
 import com.rokas.showuswhatyougot.storage.db.FavoritePokemonDao
 import com.rokas.showuswhatyougot.storage.db.FavoritePokemonEntity
@@ -18,12 +19,12 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class PokemonRepository @Inject constructor(
+class PokemonRepositoryImpl @Inject constructor(
     private val pokeApiService: PokeApiService,
     private val pokemonDao: PokemonDao,
     private val pokemonDetailDao: PokemonDetailDao,
     private val favoritePokemonDao: FavoritePokemonDao,
-) {
+) : com.rokas.showuswhatyougot.data.PokemonRepository {
     companion object {
         private const val OFFICIAL_ARTWORK_URL =
             "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/%d.png"
@@ -98,7 +99,7 @@ class PokemonRepository @Inject constructor(
     }
 
     // Keep original suspend functions for backward compat
-    suspend fun getPokemonPage(
+    override suspend fun getPokemonPage(
         limit: Int,
         offset: Int,
     ): PokemonPage {
@@ -124,7 +125,7 @@ class PokemonRepository @Inject constructor(
         )
     }
 
-    suspend fun getPokemonDetail(id: Int): PokemonDetail {
+    override suspend fun getPokemonDetail(id: Int): PokemonDetail {
         val response = pokeApiService.getPokemonDetail(id)
 
         val detail = PokemonDetail(
@@ -148,15 +149,15 @@ class PokemonRepository @Inject constructor(
         return detail
     }
 
-    suspend fun getCachedPokemonList(): List<Pokemon> {
+    override suspend fun getCachedPokemonList(): List<Pokemon> {
         return pokemonDao.getAll().map { it.toPokemon() }
     }
 
-    suspend fun getCachedPokemonDetail(id: Int): PokemonDetail? {
+    override suspend fun getCachedPokemonDetail(id: Int): PokemonDetail? {
         return pokemonDetailDao.getById(id)?.toPokemonDetail()
     }
 
-    fun getFavoritePokemon(): Flow<List<Pokemon>> {
+    override fun getFavoritePokemon(): Flow<List<Pokemon>> {
         return favoritePokemonDao.getAll().map { favorites ->
             val ids = favorites.map { it.pokemonId }.toSet()
             if (ids.isEmpty()) emptyList()
@@ -166,13 +167,13 @@ class PokemonRepository @Inject constructor(
         }
     }
 
-    fun isFavorite(pokemonId: Int): Flow<Boolean> = favoritePokemonDao.isFavorite(pokemonId)
+    override fun isFavorite(pokemonId: Int): Flow<Boolean> = favoritePokemonDao.isFavorite(pokemonId)
 
-    fun getFavoriteIds(): Flow<Set<Int>> = favoritePokemonDao.getAll().map { list ->
+    override fun getFavoriteIds(): Flow<Set<Int>> = favoritePokemonDao.getAll().map { list ->
         list.map { it.pokemonId }.toSet()
     }
 
-    suspend fun toggleFavorite(pokemonId: Int) {
+    override suspend fun toggleFavorite(pokemonId: Int) {
         val entity = FavoritePokemonEntity(pokemonId)
         // Use a simple check-and-toggle
         val isFav = favoritePokemonDao.isFavorite(pokemonId).first()
@@ -218,9 +219,4 @@ class PokemonRepository @Inject constructor(
         weightKilograms = weightKilograms,
     )
 }
-
-data class PokemonPage(
-    val pokemon: List<Pokemon>,
-    val nextOffset: Int?,
-)
 

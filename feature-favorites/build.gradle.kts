@@ -26,8 +26,7 @@ android {
 
 dependencies {
     // Assuming :common now houses the shared UI components/logic
-    implementation(project(":common")) 
-    implementation(project(":network"))
+    implementation(project(":common"))
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.material3)
     implementation("androidx.compose.material:material-icons-core")
