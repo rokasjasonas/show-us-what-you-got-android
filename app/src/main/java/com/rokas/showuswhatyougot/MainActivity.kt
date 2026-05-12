@@ -6,6 +6,7 @@ import android.net.Network
 import android.net.NetworkCapabilities
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -86,17 +87,17 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(isDark) {
                 enableEdgeToEdge(
                     statusBarStyle = if (isDark) {
-                        androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+                        SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
                     } else {
-                        androidx.activity.SystemBarStyle.light(
+                        SystemBarStyle.light(
                             android.graphics.Color.TRANSPARENT,
                             android.graphics.Color.TRANSPARENT
                         )
                     },
                     navigationBarStyle = if (isDark) {
-                        androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+                        SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
                     } else {
-                        androidx.activity.SystemBarStyle.light(
+                        SystemBarStyle.light(
                             android.graphics.Color.TRANSPARENT,
                             android.graphics.Color.TRANSPARENT
                         )
@@ -137,7 +138,6 @@ fun ShowUsWhatYouGotApp(
     val favoritesViewModel: FavoritesViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 
     var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
-    val currentLanguageTag by preferencesManager.selectedLanguage.collectAsState(initial = null)
     val systemDark = isSystemInDarkTheme()
     val storedDarkMode by preferencesManager.darkModeEnabled.collectAsState(initial = null)
     val isDarkMode = storedDarkMode ?: systemDark
@@ -207,7 +207,6 @@ fun ShowUsWhatYouGotApp(
         onLanguageSelected = { tag ->
             scope.launch { preferencesManager.setSelectedLanguage(tag) }
         },
-        currentLanguageTag = currentLanguageTag,
         isDarkMode = isDarkMode,
         onDarkModeToggled = { enabled ->
             scope.launch { preferencesManager.setDarkModeEnabled(enabled) }
@@ -238,7 +237,6 @@ private fun ShowUsWhatYouGotAppContent(
     onFavoritePokemonSelected: (Int) -> Unit,
     onBackFromFavoriteDetail: () -> Unit,
     onLanguageSelected: (String) -> Unit,
-    currentLanguageTag: String?,
     isDarkMode: Boolean,
     onDarkModeToggled: (Boolean) -> Unit,
 ) {
@@ -488,7 +486,6 @@ private fun ShowUsWhatYouGotAppPreview() {
             onFavoritePokemonSelected = {},
             onBackFromFavoriteDetail = {},
             onLanguageSelected = {},
-            currentLanguageTag = null,
             isDarkMode = false,
             onDarkModeToggled = {},
         )
