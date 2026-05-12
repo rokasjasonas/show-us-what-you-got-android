@@ -20,7 +20,7 @@ android {
 }
 
 dependencies {
-    implementation(project(":common"))
+    implementation(project(":domain"))
     implementation(project(":storage"))
     implementation(libs.google.hilt.android)
     implementation(libs.squareup.okhttp)

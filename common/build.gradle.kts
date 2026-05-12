@@ -1,10 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.ksp)
 }
-
-apply(plugin = "com.google.dagger.hilt.android")
 
 android {
     namespace = "com.rokas.showuswhatyougot.common"
@@ -25,13 +22,12 @@ android {
 }
 
 dependencies {
+    api(project(":domain"))
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.material.icons.core)
     implementation(libs.coil.compose)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.google.hilt.android)
-    ksp(libs.google.hilt.compiler)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }

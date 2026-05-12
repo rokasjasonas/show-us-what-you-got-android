@@ -6,7 +6,7 @@ plugins {
 apply(plugin = "com.google.dagger.hilt.android")
 
 android {
-    namespace = "com.rokas.showuswhatyougot.storage"
+    namespace = "com.rokas.showuswhatyougot.domain"
     compileSdk = 36
 
     defaultConfig {
@@ -20,10 +20,6 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.datastore.preferences)
-    implementation(libs.androidx.room.runtime)
-    implementation(libs.androidx.room.ktx)
-    ksp(libs.androidx.room.compiler)
     implementation(libs.google.hilt.android)
     ksp(libs.google.hilt.compiler)
 }

@@ -58,6 +58,7 @@ android {
 dependencies {
     implementation(project(":analytics"))
     implementation(project(":common"))
+    implementation(project(":domain"))
     implementation(project(":feature-details"))
     implementation(project(":feature-favorites"))
     implementation(project(":feature-list"))
